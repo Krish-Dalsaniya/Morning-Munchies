@@ -189,7 +189,7 @@ class _AdminHomeState extends State<AdminHome> {
                 'assets/images/logo.png',
                 width: 32,
                 height: 32,
-                errorBuilder: (_, __, ___) => const Icon(Icons.wb_sunny, color: Colors.orange),
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.wb_sunny, color: Colors.orange),
               ),
             ),
             const SizedBox(width: 10),

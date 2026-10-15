@@ -17,6 +17,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    _obscurePassword = true;
+  }
+
+  @override
   void dispose() {
     _name.dispose();
     _email.dispose();
@@ -56,7 +62,12 @@ class _LoginScreenState extends State<LoginScreen> {
         await supabase.auth.signInWithPassword(email: email, password: pass);
       }
     } on AuthException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      if (mounted) {
+        final msg = e.message.toLowerCase().contains('invalid login credentials')
+            ? 'Invalid email or password. If you are new, tap "Sign up" below.'
+            : e.message;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     } finally {
@@ -139,17 +150,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _pass,
                           hintText: 'Password',
                           icon: Icons.lock_outline_rounded,
-                          obscureText: _obscurePassword,
+                          obscureText: _obscurePassword == true,
                           borderColor: borderColor,
                           labelColor: labelColor,
                           primaryColor: primaryColor,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                              _obscurePassword == true ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                               color: labelColor,
                               size: 20,
                             ),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            onPressed: () => setState(() => _obscurePassword = !(_obscurePassword == true)),
                           ),
                         ),
                         const SizedBox(height: 22),
@@ -254,7 +265,9 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       child: TextField(
         controller: controller,
-        obscureText: obscureText,
+        obscureText: obscureText == true,
+        enableSuggestions: obscureText != true,
+        autocorrect: obscureText != true,
         keyboardType: keyboardType,
         style: const TextStyle(fontSize: 15, color: Color(0xFF2C2420)),
         decoration: InputDecoration(
