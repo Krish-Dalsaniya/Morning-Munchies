@@ -102,177 +102,360 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: refreshTick,
-      builder: (context, _, child) => RefreshIndicator(
-        onRefresh: () async {
-          setState(() {
-            _future = _load();
-          });
-          await _future;
-        },
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _future,
-          builder: (context, snap) {
-            if (snap.hasError) return Center(child: Text('Error: ${snap.error}'));
-            if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+    return Container(
+      color: const Color(0xFFFBF8F3),
+      child: ValueListenableBuilder<int>(
+        valueListenable: refreshTick,
+        builder: (context, _, child) => RefreshIndicator(
+          onRefresh: () async {
+            setState(() {
+              _future = _load();
+            });
+            await _future;
+          },
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: _future,
+            builder: (context, snap) {
+              if (snap.hasError) return Center(child: Text('Error: ${snap.error}'));
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: Color(0xFFE84E26)));
+              }
 
-            final rows = snap.data ?? [];
-            final pending = rows.where((r) => (r['balance'] as num) < -0.01).toList();
-            final settled = rows.where((r) => (r['balance'] as num) >= -0.01).toList();
-            final totalOwed = pending.fold<double>(0, (sum, r) => sum - (r['balance'] as num).toDouble());
+              final rows = snap.data ?? [];
+              final pending = rows.where((r) => (r['balance'] as num) < -0.01).toList();
+              final settled = rows.where((r) => (r['balance'] as num) >= -0.01).toList();
+              final totalOwed = pending.fold<double>(0, (sum, r) => sum - (r['balance'] as num).toDouble());
 
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // Office Summary Card with hover lift
-                HoverLiftCard(
-                  borderRadius: BorderRadius.circular(20),
-                  color: totalOwed > 0 ? Colors.red.withValues(alpha: 0.08) : Colors.green.withValues(alpha: 0.08),
-                  border: Border.all(color: (totalOwed > 0 ? Colors.red : Colors.green).withValues(alpha: 0.2)),
-                  hoverBorder: Border.all(color: (totalOwed > 0 ? Colors.red : Colors.green).withValues(alpha: 0.6), width: 1.5),
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total Outstanding Owed',
-                            style: TextStyle(fontSize: 13, color: Colors.grey[700], fontWeight: FontWeight.w500),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '₹${totalOwed.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: totalOwed > 0 ? Colors.red[800] : Colors.green[800],
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+                children: [
+                  // Total Outstanding Owed Summary Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFCEEE3),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Total Outstanding Owed',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF70655E),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '₹${totalOwed.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFFE84E26),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              pending.length == 1
+                                  ? '1 person has pending dues'
+                                  : '${pending.length} people have pending dues',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8A827A),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF5DCD3),
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${pending.length} people have pending dues',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              const Icon(
+                                Icons.receipt_long_rounded,
+                                color: Color(0xFFD34A26),
+                                size: 34,
+                              ),
+                              Positioned(
+                                right: 12,
+                                bottom: 12,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFD34A26),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Text(
+                                    '₹',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Section 1: Pending Payments
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time_filled_rounded,
+                        color: Color(0xFFD34A26),
+                        size: 20,
                       ),
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: (totalOwed > 0 ? Colors.red : Colors.green).withValues(alpha: 0.2),
-                        child: Icon(
-                          totalOwed > 0 ? Icons.money_off : Icons.check_circle,
-                          color: totalOwed > 0 ? Colors.red : Colors.green,
-                          size: 28,
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Pending Payments',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF221711),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFDE6E2),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Text(
+                          '${pending.length}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFD34A26),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 12),
 
-                // Pending Dues Section
-                Row(
-                  children: [
-                    const Text('Pending Payments', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 8),
+                  if (pending.isEmpty)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(99)),
-                      child: Text('${pending.length}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red[900])),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '🎉 Everyone is settled up! No pending payments.',
+                          style: TextStyle(color: Color(0xFF70655E)),
+                        ),
+                      ),
+                    )
+                  else
+                    for (int i = 0; i < pending.length; i++) ...[
+                      FadeSlideEntry(
+                        index: i,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const CircleAvatar(
+                                radius: 24,
+                                backgroundColor: Color(0xFFFDECE8),
+                                child: Icon(Icons.person, color: Color(0xFFD34A26), size: 24),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      pending[i]['name'] ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF221711),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      'Owes ₹${(-(pending[i]['balance'] as num)).toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFFD34A26),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              BouncingButton(
+                                onPressed: () => _recordPayment(pending[i], false),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE84E26),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: const Text(
+                                    'Mark Paid',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
 
-                if (pending.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text('🎉 Everyone is settled up! No pending payments.', style: TextStyle(color: Colors.grey[600])),
-                  )
-                else
-                  for (int i = 0; i < pending.length; i++) ...[
+                  const SizedBox(height: 24),
+
+                  // Section 2: Settled / Advance Credit
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: Color(0xFF2E7D32),
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Settled / Advance Credit',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF221711),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  for (int i = 0; i < settled.length; i++) ...[
                     FadeSlideEntry(
                       index: i,
-                      child: HoverLiftCard(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.white,
-                        border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
-                        hoverBorder: Border.all(color: Colors.red.withValues(alpha: 0.6), width: 1.5),
-                        child: ListTile(
-                          leading: const CircleAvatar(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                            child: Icon(Icons.person, size: 20),
-                          ),
-                          title: Text(pending[i]['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(
-                            'Owes ₹${(-(pending[i]['balance'] as num)).toStringAsFixed(2)}',
-                            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
-                          ),
-                          trailing: BouncingButton(
-                            onPressed: () => _recordPayment(pending[i], false),
-                            child: FilledButton(
-                              style: FilledButton.styleFrom(backgroundColor: Colors.deepOrange),
-                              onPressed: () => _recordPayment(pending[i], false),
-                              child: const Text('Mark Paid'),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
-                          ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 24,
+                              backgroundColor: Color(0xFFE8F5E9),
+                              child: Icon(Icons.person, color: Color(0xFF2E7D32), size: 24),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    settled[i]['name'] ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF221711),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    (settled[i]['balance'] as num) > 0.01
+                                        ? 'Credit: +₹${(settled[i]['balance'] as num).toStringAsFixed(2)}'
+                                        : 'Settled (₹0.00)',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: (settled[i]['balance'] as num) > 0.01
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
+                                      color: (settled[i]['balance'] as num) > 0.01
+                                          ? const Color(0xFF2E7D32)
+                                          : const Color(0xFF8A827A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            BouncingButton(
+                              onPressed: () => _recordPayment(settled[i], true),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFCEEE3),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.add_circle_outline_rounded,
+                                      size: 15,
+                                      color: Color(0xFF8A3B18),
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Add Advance',
+                                      style: TextStyle(
+                                        color: Color(0xFF8A3B18),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ],
-
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 8),
-
-                // Settled / Advance Section
-                const Text('Settled / Advance Credit', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-
-                for (int i = 0; i < settled.length; i++) ...[
-                  FadeSlideEntry(
-                    index: i,
-                    child: HoverLiftCard(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.white,
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
-                      hoverBorder: Border.all(color: Colors.green.withValues(alpha: 0.5), width: 1.2),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.green.withValues(alpha: 0.15),
-                          foregroundColor: Colors.green[800],
-                          child: const Icon(Icons.person, size: 20),
-                        ),
-                        title: Text(settled[i]['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: Text(
-                          (settled[i]['balance'] as num) > 0.01
-                              ? 'Credit: +₹${(settled[i]['balance'] as num).toStringAsFixed(2)}'
-                              : 'Settled (₹0.00)',
-                          style: TextStyle(
-                            color: (settled[i]['balance'] as num) > 0.01 ? Colors.green[800] : Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        trailing: BouncingButton(
-                          onPressed: () => _recordPayment(settled[i], true),
-                          child: TextButton(
-                            onPressed: () => _recordPayment(settled[i], true),
-                            child: const Text('Add Advance'),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
-                const SizedBox(height: 40),
-              ],
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

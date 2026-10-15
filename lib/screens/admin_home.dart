@@ -61,6 +61,7 @@ class _AdminHomeState extends State<AdminHome> {
   void _showMoreBottomSheet() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: const Color(0xFFFBF8F3),
       showDragHandle: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -72,108 +73,207 @@ class _AdminHomeState extends State<AdminHome> {
 
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // User Profile Header
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.deepOrange,
-                    foregroundColor: Colors.white,
-                    child: Text(
-                      userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: const Color(0xFFE84E26),
+                      foregroundColor: Colors.white,
+                      child: Text(
+                        userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                      ),
                     ),
-                  ),
-                  title: Row(
-                    children: [
-                      Text(userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(color: Colors.deepOrange, borderRadius: BorderRadius.circular(4)),
-                        child: const Text('ADMIN', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                userName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  color: Color(0xFF221711),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE84E26),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  'ADMIN',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            userEmail,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF70655E),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  subtitle: Text(userEmail, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                ),
-                const Divider(height: 24),
-
-                // Management Sections
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Text('MANAGEMENT & SETUP', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.1)),
-                ),
-                Card(
-                  elevation: 0,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.restaurant_menu, color: Colors.deepOrange),
-                        title: const Text('Vendors & Food Catalog', style: TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: const Text('Manage vendors, menu items & prices', style: TextStyle(fontSize: 12)),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.pop(c);
-                          _openVendors();
-                        },
-                      ),
-                      const Divider(height: 1, indent: 56),
-                      ListTile(
-                        leading: const Icon(Icons.people_outline, color: Colors.deepOrange),
-                        title: const Text('People & Roles', style: TextStyle(fontWeight: FontWeight.w600)),
-                        subtitle: const Text('Manage team members & permissions', style: TextStyle(fontSize: 12)),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.pop(c);
-                          _openPeople();
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
+                const Divider(height: 1, thickness: 1, color: Color(0xFFF4EEE6)),
+                const SizedBox(height: 12),
 
-                // Account Actions
-                Card(
-                  elevation: 0,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.refresh),
-                        title: const Text('Refresh Data'),
-                        onTap: () {
-                          Navigator.pop(c);
-                          refresh();
-                        },
-                      ),
-                      const Divider(height: 1, indent: 56),
-                      ListTile(
-                        leading: const Icon(Icons.logout, color: Colors.red),
-                        title: const Text('Sign Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
-                        onTap: () {
-                          Navigator.pop(c);
-                          supabase.auth.signOut();
-                        },
-                      ),
-                    ],
+                // Management Sections Header
+                const Padding(
+                  padding: EdgeInsets.only(left: 4, bottom: 8),
+                  child: Text(
+                    'MANAGEMENT & SETUP',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF8A827A),
+                      letterSpacing: 0.8,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
+
+                _buildMoreTile(
+                  icon: Icons.restaurant_menu_rounded,
+                  iconColor: const Color(0xFFE84E26),
+                  iconBgColor: const Color(0xFFFDE6D9),
+                  title: 'Vendors & Food Catalog',
+                  subtitle: 'Manage vendors, menu items & prices',
+                  onTap: () {
+                    Navigator.pop(c);
+                    _openVendors();
+                  },
+                ),
+                const SizedBox(height: 8),
+
+                _buildMoreTile(
+                  icon: Icons.group_rounded,
+                  iconColor: const Color(0xFFE84E26),
+                  iconBgColor: const Color(0xFFFDE6D9),
+                  title: 'People & Roles',
+                  subtitle: 'Manage team members & permissions',
+                  onTap: () {
+                    Navigator.pop(c);
+                    _openPeople();
+                  },
+                ),
+                const SizedBox(height: 8),
+
+                _buildMoreTile(
+                  icon: Icons.refresh_rounded,
+                  iconColor: const Color(0xFF221711),
+                  iconBgColor: const Color(0xFFF0E8DC),
+                  title: 'Refresh Data',
+                  onTap: () {
+                    Navigator.pop(c);
+                    refresh();
+                  },
+                ),
+                const SizedBox(height: 8),
+
+                _buildMoreTile(
+                  icon: Icons.logout_rounded,
+                  iconColor: const Color(0xFFD32F2F),
+                  iconBgColor: const Color(0xFFFDECE8),
+                  title: 'Sign Out',
+                  titleColor: const Color(0xFFD32F2F),
+                  chevronColor: const Color(0xFFD32F2F),
+                  onTap: () {
+                    Navigator.pop(c);
+                    supabase.auth.signOut();
+                  },
+                ),
+                const SizedBox(height: 12),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildMoreTile({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    required String title,
+    String? subtitle,
+    Color titleColor = const Color(0xFF221711),
+    Color chevronColor = const Color(0xFF70655E),
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFCEEE3),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: titleColor,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF70655E),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: chevronColor, size: 20),
+          ],
+        ),
+      ),
     );
   }
 
@@ -260,8 +360,8 @@ class _AdminHomeState extends State<AdminHome> {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.how_to_vote_outlined),
-            selectedIcon: Icon(Icons.how_to_vote),
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
             label: 'Vote',
           ),
           NavigationDestination(
@@ -270,13 +370,13 @@ class _AdminHomeState extends State<AdminHome> {
             label: 'Results',
           ),
           NavigationDestination(
-            icon: Icon(Icons.dinner_dining_outlined),
-            selectedIcon: Icon(Icons.dinner_dining),
+            icon: Icon(Icons.checklist_rounded),
+            selectedIcon: Icon(Icons.checklist_rounded),
             label: 'Pick Menu',
           ),
           NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
+            icon: Icon(Icons.article_outlined),
+            selectedIcon: Icon(Icons.article_rounded),
             label: 'Ledger',
           ),
           NavigationDestination(
