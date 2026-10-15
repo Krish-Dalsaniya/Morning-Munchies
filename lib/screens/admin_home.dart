@@ -183,6 +183,16 @@ class _AdminHomeState extends State<AdminHome> {
       appBar: AppBar(
         title: Row(
           children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 32,
+                height: 32,
+                errorBuilder: (_, __, ___) => const Icon(Icons.wb_sunny, color: Colors.orange),
+              ),
+            ),
+            const SizedBox(width: 10),
             const Text('Morning Munchies', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(width: 8),
             Container(
