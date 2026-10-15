@@ -28,11 +28,34 @@ class _AdminHomeState extends State<AdminHome> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => Scaffold(
+        builder: (ctx) => Scaffold(
+          backgroundColor: const Color(0xFFFBF8F3),
           appBar: AppBar(
-            title: const Text('Vendors & Food Catalog', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            backgroundColor: const Color(0xFFFBF8F3),
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.chevron_left, size: 28, color: Color(0xFF221711)),
+              onPressed: () => Navigator.pop(ctx),
+            ),
+            title: const Text(
+              'Vendors & Food Catalog',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF221711)),
+            ),
             actions: [
-              IconButton(icon: const Icon(Icons.refresh), tooltip: 'Refresh', onPressed: refresh),
+              Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF0E8DC),
+                  shape: BoxShape.circle,
+                ),
+                margin: const EdgeInsets.only(right: 14),
+                child: IconButton(
+                  icon: const Icon(Icons.refresh_rounded, size: 20, color: Color(0xFF4A3E38)),
+                  tooltip: 'Refresh',
+                  onPressed: refresh,
+                ),
+              ),
             ],
           ),
           body: const VendorsTab(),
@@ -45,11 +68,34 @@ class _AdminHomeState extends State<AdminHome> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => Scaffold(
+        builder: (ctx) => Scaffold(
+          backgroundColor: const Color(0xFFFBF8F3),
           appBar: AppBar(
-            title: const Text('People & Roles', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            backgroundColor: const Color(0xFFFBF8F3),
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.chevron_left, size: 28, color: Color(0xFF221711)),
+              onPressed: () => Navigator.pop(ctx),
+            ),
+            title: const Text(
+              'People & Roles',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF221711)),
+            ),
             actions: [
-              IconButton(icon: const Icon(Icons.refresh), tooltip: 'Refresh', onPressed: refresh),
+              Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF0E8DC),
+                  shape: BoxShape.circle,
+                ),
+                margin: const EdgeInsets.only(right: 14),
+                child: IconButton(
+                  icon: const Icon(Icons.refresh_rounded, size: 20, color: Color(0xFF4A3E38)),
+                  tooltip: 'Refresh',
+                  onPressed: refresh,
+                ),
+              ),
             ],
           ),
           body: const PeopleTab(),

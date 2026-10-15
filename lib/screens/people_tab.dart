@@ -74,81 +74,221 @@ class _PeopleTabState extends State<PeopleTab> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: refreshTick,
-      builder: (context, _, child) => RefreshIndicator(
-        onRefresh: () async {
-          setState(() {
-            _future = _load();
-          });
-          await _future;
-        },
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _future,
-          builder: (context, snap) {
-            if (snap.hasError) return Center(child: Text('Error: ${snap.error}'));
-            if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+    return Container(
+      color: const Color(0xFFFBF8F3),
+      child: ValueListenableBuilder<int>(
+        valueListenable: refreshTick,
+        builder: (context, _, child) => RefreshIndicator(
+          onRefresh: () async {
+            setState(() {
+              _future = _load();
+            });
+            await _future;
+          },
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: _future,
+            builder: (context, snap) {
+              if (snap.hasError) return Center(child: Text('Error: ${snap.error}'));
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: Color(0xFFE84E26)));
+              }
 
-            final people = snap.data ?? [];
+              final people = snap.data ?? [];
 
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Registered People', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    Chip(
-                      label: Text('${people.length} members', style: const TextStyle(fontSize: 12)),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                for (final p in people) ...[
-                  Card(
-                    elevation: 1,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: p['role'] == 'admin' ? Colors.deepOrange : Colors.grey[400],
-                        foregroundColor: Colors.white,
-                        child: Icon(p['role'] == 'admin' ? Icons.admin_panel_settings : Icons.person),
-                      ),
-                      title: Row(
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+                children: [
+                  // Subheader Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
                         children: [
-                          Expanded(child: Text(p['name'] ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold))),
-                          if (p['id'] == _currentUid)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(color: Colors.blue[100], borderRadius: BorderRadius.circular(6)),
-                              child: Text('You', style: TextStyle(fontSize: 11, color: Colors.blue[900], fontWeight: FontWeight.bold)),
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFDE6D9),
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(
+                              Icons.group_rounded,
+                              color: Color(0xFFE84E26),
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'Registered People',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF221711),
+                            ),
+                          ),
                         ],
                       ),
-                      subtitle: Text(
-                        'Role: ${(p['role'] ?? 'staff').toString().toUpperCase()}',
-                        style: TextStyle(
-                          color: p['role'] == 'admin' ? Colors.deepOrange : Colors.grey[700],
-                          fontWeight: FontWeight.w600,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFCEEE3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          '${people.length} members',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF70655E),
+                          ),
                         ),
                       ),
-                      trailing: p['id'] == _currentUid
-                          ? null
-                          : OutlinedButton(
-                              style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
-                              onPressed: () => _toggleRole(p['id'], p['role'] ?? 'staff', p['name'] ?? 'User'),
-                              child: Text(p['role'] == 'admin' ? 'Make Staff' : 'Make Admin'),
-                            ),
-                    ),
+                    ],
                   ),
+                  const SizedBox(height: 16),
+
+                  // People Cards
+                  for (final p in people) ...[
+                    Builder(
+                      builder: (context) {
+                        final isMe = p['id'] == _currentUid;
+                        final isAdmin = p['role'] == 'admin';
+
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 5),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 24,
+                                backgroundColor: isMe
+                                    ? const Color(0xFFE84E26)
+                                    : const Color(0xFFEAE7E4),
+                                foregroundColor: isMe ? Colors.white : const Color(0xFF8A827A),
+                                child: const Icon(Icons.person, size: 24),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      p['name'] ?? 'User',
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF221711),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          'Role: ',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF8A827A),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: isAdmin
+                                                ? const Color(0xFFFDE6D9)
+                                                : const Color(0xFFFCEEE3),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            (p['role'] ?? 'staff').toString().toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: isAdmin
+                                                  ? const Color(0xFFE84E26)
+                                                  : const Color(0xFF70655E),
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isMe)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE3F2FD),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Text(
+                                    'You',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF1976D2),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                )
+                              else
+                                InkWell(
+                                  onTap: () => _toggleRole(p['id'], p['role'] ?? 'staff', p['name'] ?? 'User'),
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: const Color(0xFFC8532F),
+                                        width: 1.2,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          isAdmin ? Icons.person_outline : Icons.military_tech_rounded,
+                                          size: 15,
+                                          color: const Color(0xFFC8532F),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          isAdmin ? 'Make Staff' : 'Make Admin',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFFC8532F),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: 40),
                 ],
-                const SizedBox(height: 40),
-              ],
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

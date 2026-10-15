@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core.dart';
+import '../widgets/interactive_effects.dart';
 
 class VendorsTab extends StatefulWidget {
   const VendorsTab({super.key});
@@ -174,39 +175,78 @@ class _VendorsTabState extends State<VendorsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: refreshTick,
-      builder: (context, _, child) => RefreshIndicator(
-        onRefresh: () async {
-          setState(() {
-            _future = _load();
-          });
-          await _future;
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Add Vendor Card
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
+    return Container(
+      color: const Color(0xFFFBF8F3),
+      child: ValueListenableBuilder<int>(
+        valueListenable: refreshTick,
+        builder: (context, _, child) => RefreshIndicator(
+          onRefresh: () async {
+            setState(() {
+              _future = _load();
+            });
+            await _future;
+          },
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+            children: [
+              // Add New Vendor Card
+              Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFCEEE3),
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Add New Vendor', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.storefront_rounded,
+                          color: Color(0xFFE84E26),
+                          size: 22,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Add New Vendor',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF221711),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 12),
+
+                    // Inputs Row
                     Row(
                       children: [
                         Expanded(
                           flex: 3,
                           child: TextField(
                             controller: _vendorName,
-                            decoration: const InputDecoration(
-                              labelText: 'Vendor Name (e.g. Sharma Canteen)',
-                              border: OutlineInputBorder(),
+                            style: const TextStyle(fontSize: 14),
+                            decoration: InputDecoration(
+                              hintText: 'Vendor Name (e.g....',
+                              hintStyle: const TextStyle(color: Color(0xFF9E8D8A), fontSize: 13),
+                              prefixIcon: const Icon(Icons.storefront_outlined, size: 18, color: Color(0xFF8A827A)),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                               isDense: true,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFE84E26), width: 1.5),
+                              ),
                             ),
                           ),
                         ),
@@ -215,65 +255,123 @@ class _VendorsTabState extends State<VendorsTab> {
                           flex: 2,
                           child: TextField(
                             controller: _vendorPhone,
-                            decoration: const InputDecoration(
-                              labelText: 'Phone (optional)',
-                              border: OutlineInputBorder(),
+                            keyboardType: TextInputType.phone,
+                            style: const TextStyle(fontSize: 14),
+                            decoration: InputDecoration(
+                              hintText: 'Phone (op...',
+                              hintStyle: const TextStyle(color: Color(0xFF9E8D8A), fontSize: 13),
+                              prefixIcon: const Icon(Icons.phone_outlined, size: 18, color: Color(0xFF8A827A)),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                               isDense: true,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFE84E26), width: 1.5),
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: FilledButton.icon(
-                        onPressed: _isAddingVendor ? null : _addVendor,
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Add Vendor'),
+
+                    // Add Vendor Full-Width Button
+                    BouncingButton(
+                      onPressed: _isAddingVendor ? null : _addVendor,
+                      child: Container(
+                        width: double.infinity,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE84E26),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        alignment: Alignment.center,
+                        child: _isAddingVendor
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.add, size: 18, color: Colors.white),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Add Vendor',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            const Text('Vendors & Food Catalog', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+              // Section Title
+              const Text(
+                'Vendors & Food Catalog',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF221711),
+                ),
+              ),
+              const SizedBox(height: 10),
 
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _future,
-              builder: (context, snap) {
-                if (snap.hasError) return Center(child: Text('Error: ${snap.error}'));
-                if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _future,
+                builder: (context, snap) {
+                  if (snap.hasError) return Center(child: Text('Error: ${snap.error}'));
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(color: Color(0xFFE84E26)));
+                  }
 
-                final vendors = snap.data ?? [];
-                if (vendors.isEmpty) {
-                  return Container(
-                    margin: const EdgeInsets.only(top: 24),
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Center(
-                      child: Text('No vendors yet. Add your first vendor above.', style: TextStyle(color: Colors.grey)),
-                    ),
-                  );
-                }
+                  final vendors = snap.data ?? [];
+                  if (vendors.isEmpty) {
+                    return Container(
+                      margin: const EdgeInsets.only(top: 24),
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFEFE8DE)),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'No vendors yet. Add your first vendor above.',
+                          style: TextStyle(color: Color(0xFF70655E)),
+                        ),
+                      ),
+                    );
+                  }
 
-                return Column(
-                  children: [
-                    for (final v in vendors) ...[
-                      _buildVendorCard(v),
+                  return Column(
+                    children: [
+                      for (final v in vendors) ...[
+                        _buildVendorCard(v),
+                      ],
                     ],
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 40),
-          ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -285,68 +383,171 @@ class _VendorsTabState extends State<VendorsTab> {
     final phone = vendor['phone'] as String?;
     final items = List<Map<String, dynamic>>.from(vendor['food_items'] ?? []);
 
-    return Card(
-      elevation: 1,
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Vendor header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Vendor Header Row
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFDE6D9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.storefront_rounded,
+                  color: Color(0xFFE84E26),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vendorName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF221711),
+                      ),
+                    ),
+                    if (phone != null && phone.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(Icons.phone, size: 12, color: Color(0xFF70655E)),
+                          const SizedBox(width: 4),
+                          Text(
+                            phone,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF70655E),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              // Add Item Pill Button
+              BouncingButton(
+                onPressed: () => _addItemDialog(vendorId, vendorName),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFCEEE3),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Row(
                     children: [
-                      Text(vendorName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      if (phone != null && phone.isNotEmpty)
-                        Text('📞 $phone', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                      Icon(Icons.add, size: 14, color: Color(0xFF8A3B18)),
+                      SizedBox(width: 4),
+                      Text(
+                        'Add Item',
+                        style: TextStyle(
+                          color: Color(0xFF8A3B18),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                OutlinedButton.icon(
-                  onPressed: () => _addItemDialog(vendorId, vendorName),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Add Item'),
-                  style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  tooltip: 'Delete vendor',
-                  onPressed: () => _deleteVendor(vendorId, vendorName),
-                ),
-              ],
-            ),
-            const Divider(height: 20),
+              ),
+              const SizedBox(width: 6),
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFD34A26), size: 22),
+                tooltip: 'Delete vendor',
+                onPressed: () => _deleteVendor(vendorId, vendorName),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF4EEE6)),
+          const SizedBox(height: 6),
 
-            if (items.isEmpty)
+          if (items.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'No items yet. Tap "+ Add Item" to add food options.',
+                style: TextStyle(color: Color(0xFF9E8D8A), fontSize: 13),
+              ),
+            )
+          else
+            for (int i = 0; i < items.length; i++) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text('No items yet. Tap "Add Item" to add food options.', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-              )
-            else
-              for (final item in items) ...[
-                ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(item['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text(
-                    '${(item['meal'] ?? '').toString().toUpperCase()} • ₹${((item['price'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close, size: 18, color: Colors.grey),
-                    tooltip: 'Delete item',
-                    onPressed: () => _deleteItem(item['id']),
-                  ),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                child: Row(
+                  children: [
+                    // Indian Veg Symbol
+                    Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFF2E7D32), width: 1.5),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.circle, size: 8, color: Color(0xFF2E7D32)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            items[i]['name'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF221711),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${(items[i]['meal'] ?? 'Breakfast').toString().toUpperCase()} • ₹${((items[i]['price'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF8A827A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF554A43)),
+                      tooltip: 'Delete item',
+                      onPressed: () => _deleteItem(items[i]['id']),
+                    ),
+                  ],
                 ),
-              ],
-          ],
-        ),
+              ),
+              if (i < items.length - 1)
+                const Divider(height: 1, thickness: 1, color: Color(0xFFF7F1EA)),
+            ],
+        ],
       ),
     );
   }
