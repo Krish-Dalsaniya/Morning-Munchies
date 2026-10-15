@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core.dart';
+import '../widgets/interactive_effects.dart';
 
 class ResultsTab extends StatefulWidget {
   const ResultsTab({super.key});
@@ -240,7 +241,11 @@ class _ResultsTabState extends State<ResultsTab> {
                           ),
                         )
                       else
-                        for (final m in menuList) _buildResultCard(m),
+                        for (int i = 0; i < menuList.length; i++)
+                          FadeSlideEntry(
+                            index: i,
+                            child: _buildResultCard(menuList[i]),
+                          ),
                       const SizedBox(height: 40),
                     ],
                   );
@@ -273,15 +278,16 @@ class _ResultsTabState extends State<ResultsTab> {
         .map((v) => v['profiles']?['name'] as String? ?? 'Someone')
         .toList();
 
-    return Card(
-      elevation: 1,
+    return HoverLiftCard(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      borderRadius: BorderRadius.circular(16),
+      color: Colors.white,
+      border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      hoverBorder: Border.all(color: Colors.deepOrange.withValues(alpha: 0.5), width: 1.5),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             // Title & Vendor
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -382,7 +388,6 @@ class _ResultsTabState extends State<ResultsTab> {
             ),
           ],
         ),
-      ),
     );
   }
 }

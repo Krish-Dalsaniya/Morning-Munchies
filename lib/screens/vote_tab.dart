@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core.dart';
+import '../widgets/interactive_effects.dart';
 
 class VoteTab extends StatefulWidget {
   const VoteTab({super.key});
@@ -228,12 +229,20 @@ class _VoteTabState extends State<VoteTab> {
                     children: [
                       if (breakfastItems.isNotEmpty) ...[
                         _buildMealHeader('🍳 Breakfast', breakfastItems.length),
-                        for (final item in breakfastItems) _buildItemCard(item),
+                        for (int i = 0; i < breakfastItems.length; i++)
+                          FadeSlideEntry(
+                            index: i,
+                            child: _buildItemCard(breakfastItems[i]),
+                          ),
                         const SizedBox(height: 16),
                       ],
                       if (lunchItems.isNotEmpty) ...[
                         _buildMealHeader('🍱 Lunch', lunchItems.length),
-                        for (final item in lunchItems) _buildItemCard(item),
+                        for (int i = 0; i < lunchItems.length; i++)
+                          FadeSlideEntry(
+                            index: i + breakfastItems.length,
+                            child: _buildItemCard(lunchItems[i]),
+                          ),
                       ],
                       const SizedBox(height: 40),
                     ],
@@ -288,59 +297,65 @@ class _VoteTabState extends State<VoteTab> {
     final yesPercent = totalVotes > 0 ? (yesCount / totalVotes) : 0.0;
     final noPercent = totalVotes > 0 ? (noCount / totalVotes) : 0.0;
 
-    return Card(
-      elevation: 1,
+    return HoverLiftCard(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Vendor & Closed status
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+      borderRadius: BorderRadius.circular(16),
+      color: Colors.white,
+      border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      hoverBorder: Border.all(color: Colors.deepOrange.withValues(alpha: 0.5), width: 1.5),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Vendor & Closed status
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                vendorName.toUpperCase(),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600], letterSpacing: 0.8),
+              ),
+              if (!open)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(99)),
+                  child: const Text('Voting Closed', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+
+          // Item Name & Price
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(itemName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+              ),
+              if (price > 0)
                 Text(
-                  vendorName.toUpperCase(),
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600], letterSpacing: 0.8),
+                  '₹${price.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepOrange),
                 ),
-                if (!open)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(99)),
-                    child: const Text('Voting Closed', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
+            ],
+          ),
+          const SizedBox(height: 12),
 
-            // Item Name & Price
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(itemName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-                ),
-                if (price > 0)
-                  Text(
-                    '₹${price.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepOrange),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Vote Buttons
-            Row(
-              children: [
-                Expanded(
+          // Vote Buttons with bouncy micro-animations
+          Row(
+            children: [
+              Expanded(
+                child: BouncingButton(
+                  onPressed: open ? () => _vote(menu['id'], 'yes', myVote) : null,
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       backgroundColor: myVote == 'yes' ? Colors.green.withValues(alpha: 0.15) : null,
-                      side: BorderSide(color: myVote == 'yes' ? Colors.green : Colors.grey.withValues(alpha: 0.3), width: myVote == 'yes' ? 2 : 1),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      side: BorderSide(
+                        color: myVote == 'yes' ? Colors.green : Colors.grey.withValues(alpha: 0.3),
+                        width: myVote == 'yes' ? 2 : 1,
+                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: open ? () => _vote(menu['id'], 'yes', myVote) : null,
@@ -354,13 +369,19 @@ class _VoteTabState extends State<VoteTab> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: BouncingButton(
+                  onPressed: open ? () => _vote(menu['id'], 'no', myVote) : null,
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       backgroundColor: myVote == 'no' ? Colors.red.withValues(alpha: 0.15) : null,
-                      side: BorderSide(color: myVote == 'no' ? Colors.red : Colors.grey.withValues(alpha: 0.3), width: myVote == 'no' ? 2 : 1),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      side: BorderSide(
+                        color: myVote == 'no' ? Colors.red : Colors.grey.withValues(alpha: 0.3),
+                        width: myVote == 'no' ? 2 : 1,
+                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: open ? () => _vote(menu['id'], 'no', myVote) : null,
@@ -374,52 +395,58 @@ class _VoteTabState extends State<VoteTab> {
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Progress Bar
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: SizedBox(
-                height: 6,
-                child: totalVotes == 0
-                    ? Container(color: Colors.grey.withValues(alpha: 0.2))
-                    : Row(
-                        children: [
-                          if (yesPercent > 0)
-                            Expanded(
-                              flex: (yesPercent * 1000).toInt(),
-                              child: Container(color: Colors.green),
-                            ),
-                          if (noPercent > 0)
-                            Expanded(
-                              flex: (noPercent * 1000).toInt(),
-                              child: Container(color: Colors.red),
-                            ),
-                        ],
-                      ),
               ),
-            ),
-            const SizedBox(height: 6),
+            ],
+          ),
+          const SizedBox(height: 12),
 
-            // Counts text
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$yesCount interested • $noCount not interested',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                if (myVote != null)
-                  Text(
-                    myVote == 'yes' ? 'You: Interested' : 'You: Not interested',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: myVote == 'yes' ? Colors.green : Colors.red),
-                  ),
-              ],
+          // Animated Progress Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: SizedBox(
+              height: 6,
+              child: totalVotes == 0
+                  ? Container(color: Colors.grey.withValues(alpha: 0.2))
+                  : Row(
+                      children: [
+                        if (yesPercent > 0)
+                          Expanded(
+                            flex: (yesPercent * 1000).toInt(),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              color: Colors.green,
+                            ),
+                          ),
+                        if (noPercent > 0)
+                          Expanded(
+                            flex: (noPercent * 1000).toInt(),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              color: Colors.red,
+                            ),
+                          ),
+                      ],
+                    ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 6),
+
+          // Counts text
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$yesCount interested • $noCount not interested',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+              if (myVote != null)
+                Text(
+                  myVote == 'yes' ? 'You: Interested' : 'You: Not interested',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: myVote == 'yes' ? Colors.green : Colors.red),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

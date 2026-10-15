@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core.dart';
+import '../widgets/interactive_effects.dart';
 
 class PickMenuTab extends StatefulWidget {
   const PickMenuTab({super.key});
@@ -188,12 +189,15 @@ class _PickMenuTabState extends State<PickMenuTab> {
                       ),
                       const SizedBox(height: 8),
 
-                      for (final v in vendors) ...[
-                        Card(
-                          elevation: 1,
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          child: Padding(
+                      for (int i = 0; i < vendors.length; i++) ...[
+                        FadeSlideEntry(
+                          index: i,
+                          child: HoverLiftCard(
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.white,
+                            border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+                            hoverBorder: Border.all(color: Colors.deepOrange.withValues(alpha: 0.5), width: 1.5),
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,19 +207,19 @@ class _PickMenuTabState extends State<PickMenuTab> {
                                     const Icon(Icons.storefront, color: Colors.deepOrange, size: 20),
                                     const SizedBox(width: 8),
                                     Text(
-                                      v['name'] ?? '',
+                                      vendors[i]['name'] ?? '',
                                       style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                                     ),
                                   ],
                                 ),
                                 const Divider(height: 20),
-                                if ((v['food_items'] as List).isEmpty)
+                                if ((vendors[i]['food_items'] as List).isEmpty)
                                   Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 8),
                                     child: Text('No food items under this vendor.', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
                                   )
                                 else
-                                  for (final item in (v['food_items'] as List)) ...[
+                                  for (final item in (vendors[i]['food_items'] as List)) ...[
                                     _buildCheckItem(item, onMenuMap),
                                   ],
                               ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core.dart';
+import '../widgets/interactive_effects.dart';
 
 class AdminWalletTab extends StatefulWidget {
   const AdminWalletTab({super.key});
@@ -124,50 +125,49 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // Office Summary Card
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                // Office Summary Card with hover lift
+                HoverLiftCard(
+                  borderRadius: BorderRadius.circular(20),
                   color: totalOwed > 0 ? Colors.red.withValues(alpha: 0.08) : Colors.green.withValues(alpha: 0.08),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Total Outstanding Owed',
-                              style: TextStyle(fontSize: 13, color: Colors.grey[700], fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '₹${totalOwed.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: totalOwed > 0 ? Colors.red[800] : Colors.green[800],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${pending.length} people have pending dues',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                            ),
-                          ],
-                        ),
-                        CircleAvatar(
-                          radius: 28,
-                          backgroundColor: (totalOwed > 0 ? Colors.red : Colors.green).withValues(alpha: 0.2),
-                          child: Icon(
-                            totalOwed > 0 ? Icons.money_off : Icons.check_circle,
-                            color: totalOwed > 0 ? Colors.red : Colors.green,
-                            size: 28,
+                  border: Border.all(color: (totalOwed > 0 ? Colors.red : Colors.green).withValues(alpha: 0.2)),
+                  hoverBorder: Border.all(color: (totalOwed > 0 ? Colors.red : Colors.green).withValues(alpha: 0.6), width: 1.5),
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Total Outstanding Owed',
+                            style: TextStyle(fontSize: 13, color: Colors.grey[700], fontWeight: FontWeight.w500),
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '₹${totalOwed.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: totalOwed > 0 ? Colors.red[800] : Colors.green[800],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${pending.length} people have pending dues',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: (totalOwed > 0 ? Colors.red : Colors.green).withValues(alpha: 0.2),
+                        child: Icon(
+                          totalOwed > 0 ? Icons.money_off : Icons.check_circle,
+                          color: totalOwed > 0 ? Colors.red : Colors.green,
+                          size: 28,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -192,29 +192,34 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                     child: Text('🎉 Everyone is settled up! No pending payments.', style: TextStyle(color: Colors.grey[600])),
                   )
                 else
-                  for (final r in pending) ...[
-                    Card(
-                      elevation: 0,
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      shape: RoundedRectangleBorder(
+                  for (int i = 0; i < pending.length; i++) ...[
+                    FadeSlideEntry(
+                      index: i,
+                      child: HoverLiftCard(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
                         borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: Colors.red.withValues(alpha: 0.2)),
-                      ),
-                      child: ListTile(
-                        leading: const CircleAvatar(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          child: Icon(Icons.person, size: 20),
-                        ),
-                        title: Text(r['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(
-                          'Owes ₹${(-(r['balance'] as num)).toStringAsFixed(2)}',
-                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
-                        ),
-                        trailing: FilledButton(
-                          style: FilledButton.styleFrom(backgroundColor: Colors.deepOrange),
-                          onPressed: () => _recordPayment(r, false),
-                          child: const Text('Mark Paid'),
+                        color: Colors.white,
+                        border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+                        hoverBorder: Border.all(color: Colors.red.withValues(alpha: 0.6), width: 1.5),
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            child: Icon(Icons.person, size: 20),
+                          ),
+                          title: Text(pending[i]['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text(
+                            'Owes ₹${(-(pending[i]['balance'] as num)).toStringAsFixed(2)}',
+                            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+                          ),
+                          trailing: BouncingButton(
+                            onPressed: () => _recordPayment(pending[i], false),
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(backgroundColor: Colors.deepOrange),
+                              onPressed: () => _recordPayment(pending[i], false),
+                              child: const Text('Mark Paid'),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -228,33 +233,38 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                 const Text('Settled / Advance Credit', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
 
-                for (final r in settled) ...[
-                  Card(
-                    elevation: 0,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    shape: RoundedRectangleBorder(
+                for (int i = 0; i < settled.length; i++) ...[
+                  FadeSlideEntry(
+                    index: i,
+                    child: HoverLiftCard(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
-                    ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.green.withValues(alpha: 0.15),
-                        foregroundColor: Colors.green[800],
-                        child: const Icon(Icons.person, size: 20),
-                      ),
-                      title: Text(r['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(
-                        (r['balance'] as num) > 0.01
-                            ? 'Credit: +₹${(r['balance'] as num).toStringAsFixed(2)}'
-                            : 'Settled (₹0.00)',
-                        style: TextStyle(
-                          color: (r['balance'] as num) > 0.01 ? Colors.green[800] : Colors.grey[600],
-                          fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+                      hoverBorder: Border.all(color: Colors.green.withValues(alpha: 0.5), width: 1.2),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.green.withValues(alpha: 0.15),
+                          foregroundColor: Colors.green[800],
+                          child: const Icon(Icons.person, size: 20),
                         ),
-                      ),
-                      trailing: TextButton(
-                        onPressed: () => _recordPayment(r, true),
-                        child: const Text('Add Advance'),
+                        title: Text(settled[i]['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        subtitle: Text(
+                          (settled[i]['balance'] as num) > 0.01
+                              ? 'Credit: +₹${(settled[i]['balance'] as num).toStringAsFixed(2)}'
+                              : 'Settled (₹0.00)',
+                          style: TextStyle(
+                            color: (settled[i]['balance'] as num) > 0.01 ? Colors.green[800] : Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        trailing: BouncingButton(
+                          onPressed: () => _recordPayment(settled[i], true),
+                          child: TextButton(
+                            onPressed: () => _recordPayment(settled[i], true),
+                            child: const Text('Add Advance'),
+                          ),
+                        ),
                       ),
                     ),
                   ),
