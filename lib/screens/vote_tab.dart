@@ -409,246 +409,274 @@ class _VoteTabState extends State<VoteTab> {
     final yesPercent = totalVotes > 0 ? (yesCount / totalVotes) : 0.0;
     final noPercent = totalVotes > 0 ? (noCount / totalVotes) : 0.0;
 
-    return HoverLiftCard(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      borderRadius: BorderRadius.circular(20),
-      color: Colors.white,
-      border: Border.all(color: const Color(0xFFEDE5DA), width: 1.2),
-      hoverBorder: Border.all(color: const Color(0xFFC8532F).withValues(alpha: 0.5), width: 1.5),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Vendor & Status pill
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                vendorName.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF8C827A),
-                  letterSpacing: 0.8,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: open ? const Color(0xFFE8F5E9) : const Color(0xFFEFEBE6),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  open ? 'Voting Open' : 'Voting Closed',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: open ? const Color(0xFF2E7D32) : const Color(0xFF756C65),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 340;
+        final imgWidth = isCompact ? 92.0 : 110.0;
+        final imgHeight = isCompact ? 64.0 : 72.0;
 
-          // Main Content: Dish Info on Left, Price & Image on Right
-          Row(
+        return HoverLiftCard(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFEDE5DA), width: 1.2),
+          hoverBorder: Border.all(color: const Color(0xFFC8532F).withValues(alpha: 0.5), width: 1.5),
+          padding: EdgeInsets.all(isCompact ? 12 : 16),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left Column: Name & Description
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      itemName,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2C2420),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _getDishDescription(itemName),
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: Color(0xFF756C65),
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-
-              // Right Column: Price at top, Dish Image below
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              // Vendor & Status pill
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (price > 0)
-                    Text(
-                      '₹${price.toStringAsFixed(2)}',
+                  Flexible(
+                    child: Text(
+                      vendorName.toUpperCase(),
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFFC8532F),
+                        color: Color(0xFF8C827A),
+                        letterSpacing: 0.8,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.asset(
-                      _getDishImagePath(itemName),
-                      width: 120,
-                      height: 75,
-                      fit: BoxFit.cover,
-                      errorBuilder: (ctx, err, stack) => Container(
-                        width: 120,
-                        height: 75,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5EBE1),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(Icons.restaurant_rounded, color: Color(0xFFC8532F), size: 28),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: open ? const Color(0xFFE8F5E9) : const Color(0xFFEFEBE6),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      open ? 'Voting Open' : 'Voting Closed',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: open ? const Color(0xFF2E7D32) : const Color(0xFF756C65),
                       ),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
-          // Vote Buttons with bouncy micro-animations
-          Row(
-            children: [
-              // Interested Button
-              Expanded(
-                child: BouncingButton(
-                  onPressed: open ? () => _vote(menu['id'], 'yes', myVote) : null,
-                  child: Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: myVote == 'yes' ? const Color(0xFFE8F5E9) : Colors.white,
-                      border: Border.all(
-                        color: myVote == 'yes' ? const Color(0xFF2E7D32) : const Color(0xFF2E7D32).withValues(alpha: 0.7),
-                        width: myVote == 'yes' ? 1.8 : 1.2,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              // Main Content: Dish Info on Left, Price & Image on Right
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Column: Name & Description
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.thumb_up_rounded, size: 16, color: Color(0xFF2E7D32)),
-                        SizedBox(width: 8),
                         Text(
-                          'Interested',
+                          itemName,
                           style: TextStyle(
-                            fontSize: 13.5,
+                            fontSize: isCompact ? 18 : 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF2E7D32),
+                            color: const Color(0xFF2C2420),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          _getDishDescription(itemName),
+                          style: TextStyle(
+                            fontSize: isCompact ? 11.5 : 12.5,
+                            color: const Color(0xFF756C65),
+                            height: 1.35,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
+                  const SizedBox(width: 10),
 
-              // Not Interested Button
-              Expanded(
-                child: BouncingButton(
-                  onPressed: open ? () => _vote(menu['id'], 'no', myVote) : null,
-                  child: Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: myVote == 'no' ? const Color(0xFFFFEBEE) : Colors.white,
-                      border: Border.all(
-                        color: myVote == 'no' ? const Color(0xFFC62828) : const Color(0xFFD1C7BD),
-                        width: myVote == 'no' ? 1.8 : 1.2,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.thumb_down_rounded,
-                          size: 16,
-                          color: myVote == 'no' ? const Color(0xFFC62828) : const Color(0xFF6B635C),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Not interested',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.bold,
-                            color: myVote == 'no' ? const Color(0xFFC62828) : const Color(0xFF6B635C),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Dual-color Animated Progress Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: SizedBox(
-              height: 6,
-              child: totalVotes == 0
-                  ? Container(color: const Color(0xFFE8E0D5))
-                  : Row(
-                      children: [
-                        if (yesPercent > 0)
-                          Expanded(
-                            flex: (yesPercent * 1000).toInt(),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              color: const Color(0xFF2E7D32),
+                  // Right Column: Price at top, Dish Image below
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (price > 0)
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '₹${price.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: isCompact ? 16 : 18,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFC8532F),
                             ),
                           ),
-                        if (noPercent > 0)
-                          Expanded(
-                            flex: (noPercent * 1000).toInt(),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              color: const Color(0xFFE53935),
+                        ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image.asset(
+                          _getDishImagePath(itemName),
+                          width: imgWidth,
+                          height: imgHeight,
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, err, stack) => Container(
+                            width: imgWidth,
+                            height: imgHeight,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5EBE1),
+                              borderRadius: BorderRadius.circular(14),
                             ),
+                            child: const Icon(Icons.restaurant_rounded, color: Color(0xFFC8532F), size: 28),
                           ),
-                      ],
-                    ),
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Counts & My Vote Status
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '$yesCount interested  •  $noCount not interested',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF756C65)),
-              ),
-              if (myVote != null)
-                Text(
-                  myVote == 'yes' ? 'You: Interested' : 'You: Not interested',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: myVote == 'yes' ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                        ),
+                      ),
+                    ],
                   ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Vote Buttons with bouncy micro-animations & FittedBox for responsive text
+              Row(
+                children: [
+                  // Interested Button
+                  Expanded(
+                    child: BouncingButton(
+                      onPressed: open ? () => _vote(menu['id'], 'yes', myVote) : null,
+                      child: Container(
+                        height: 42,
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        decoration: BoxDecoration(
+                          color: myVote == 'yes' ? const Color(0xFFE8F5E9) : Colors.white,
+                          border: Border.all(
+                            color: myVote == 'yes' ? const Color(0xFF2E7D32) : const Color(0xFF2E7D32).withValues(alpha: 0.7),
+                            width: myVote == 'yes' ? 1.8 : 1.2,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.thumb_up_rounded, size: 16, color: Color(0xFF2E7D32)),
+                              SizedBox(width: 6),
+                              Text(
+                                'Interested',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+
+                  // Not Interested Button
+                  Expanded(
+                    child: BouncingButton(
+                      onPressed: open ? () => _vote(menu['id'], 'no', myVote) : null,
+                      child: Container(
+                        height: 42,
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        decoration: BoxDecoration(
+                          color: myVote == 'no' ? const Color(0xFFFFEBEE) : Colors.white,
+                          border: Border.all(
+                            color: myVote == 'no' ? const Color(0xFFC62828) : const Color(0xFFD1C7BD),
+                            width: myVote == 'no' ? 1.8 : 1.2,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.thumb_down_rounded,
+                                size: 16,
+                                color: myVote == 'no' ? const Color(0xFFC62828) : const Color(0xFF6B635C),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Not interested',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: myVote == 'no' ? const Color(0xFFC62828) : const Color(0xFF6B635C),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Dual-color Animated Progress Bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: SizedBox(
+                  height: 6,
+                  child: totalVotes == 0
+                      ? Container(color: const Color(0xFFE8E0D5))
+                      : Row(
+                          children: [
+                            if (yesPercent > 0)
+                              Expanded(
+                                flex: (yesPercent * 1000).toInt(),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  color: const Color(0xFF2E7D32),
+                                ),
+                              ),
+                            if (noPercent > 0)
+                              Expanded(
+                                flex: (noPercent * 1000).toInt(),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  color: const Color(0xFFE53935),
+                                ),
+                              ),
+                          ],
+                        ),
                 ),
+              ),
+              const SizedBox(height: 8),
+
+              // Counts & My Vote Status
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      '$yesCount interested  •  $noCount not interested',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF756C65)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (myVote != null) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      myVote == 'yes' ? 'You: Interested' : 'You: Not interested',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: myVote == 'yes' ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

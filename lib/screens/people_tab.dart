@@ -98,38 +98,44 @@ class _PeopleTabState extends State<PeopleTab> {
               return ListView(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
                 children: [
-                  // Subheader Row
+                  // Subheader Row (Responsive)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFFDE6D9),
-                              shape: BoxShape.circle,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFDE6D9),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.group_rounded,
+                                color: Color(0xFFE84E26),
+                                size: 20,
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.group_rounded,
-                              color: Color(0xFFE84E26),
-                              size: 20,
+                            const SizedBox(width: 10),
+                            const Flexible(
+                              child: Text(
+                                'Registered People',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF221711),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'Registered People',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF221711),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFCEEE3),
                           borderRadius: BorderRadius.circular(16),
@@ -186,10 +192,11 @@ class _PeopleTabState extends State<PeopleTab> {
                                     Text(
                                       p['name'] ?? 'User',
                                       style: const TextStyle(
-                                        fontSize: 17,
+                                        fontSize: 16.5,
                                         fontWeight: FontWeight.bold,
                                         color: Color(0xFF221711),
                                       ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                     const SizedBox(height: 4),
                                     Row(
@@ -227,6 +234,7 @@ class _PeopleTabState extends State<PeopleTab> {
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               if (isMe)
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -248,7 +256,7 @@ class _PeopleTabState extends State<PeopleTab> {
                                   onTap: () => _toggleRole(p['id'], p['role'] ?? 'staff', p['name'] ?? 'User'),
                                   borderRadius: BorderRadius.circular(16),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(16),
@@ -257,24 +265,27 @@ class _PeopleTabState extends State<PeopleTab> {
                                         width: 1.2,
                                       ),
                                     ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          isAdmin ? Icons.person_outline : Icons.military_tech_rounded,
-                                          size: 15,
-                                          color: const Color(0xFFC8532F),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          isAdmin ? 'Make Staff' : 'Make Admin',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFFC8532F),
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isAdmin ? Icons.person_outline : Icons.military_tech_rounded,
+                                            size: 15,
+                                            color: const Color(0xFFC8532F),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            isAdmin ? 'Make Staff' : 'Make Admin',
+                                            style: const TextStyle(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFFC8532F),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),

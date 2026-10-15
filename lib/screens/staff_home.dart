@@ -29,26 +29,35 @@ class _StaffHomeState extends State<StaffHome> {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
                 'assets/images/logo.png',
-                width: 34,
-                height: 34,
+                width: 32,
+                height: 32,
                 errorBuilder: (context, error, stackTrace) => const Icon(Icons.wb_sunny, color: Colors.orange),
               ),
             ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Morning Munchies', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF2C2420))),
-                Text(
-                  'Hi, $userName',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF8C827A)),
-                ),
-              ],
+            const SizedBox(width: 8),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Morning Munchies',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2C2420)),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    'Hi, $userName',
+                    style: const TextStyle(fontSize: 11.5, color: Color(0xFF8C827A)),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

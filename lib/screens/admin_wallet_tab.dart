@@ -129,9 +129,9 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
               return ListView(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
                 children: [
-                  // Total Outstanding Owed Summary Card
+                  // Total Outstanding Owed Summary Card (Responsive)
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFCEEE3),
                       borderRadius: BorderRadius.circular(22),
@@ -140,42 +140,49 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Total Outstanding Owed',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF70655E),
-                                fontWeight: FontWeight.w600,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Total Outstanding Owed',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  color: Color(0xFF70655E),
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              '₹${totalOwed.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontSize: 36,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFFE84E26),
+                              const SizedBox(height: 4),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '₹${totalOwed.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 34,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFFE84E26),
+                                  ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              pending.length == 1
-                                  ? '1 person has pending dues'
-                                  : '${pending.length} people have pending dues',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF8A827A),
-                                fontWeight: FontWeight.w500,
+                              const SizedBox(height: 4),
+                              Text(
+                                pending.length == 1
+                                    ? '1 person has pending dues'
+                                    : '${pending.length} people have pending dues',
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  color: Color(0xFF8A827A),
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 12),
                         Container(
-                          width: 64,
-                          height: 64,
+                          width: 58,
+                          height: 58,
                           decoration: const BoxDecoration(
                             color: Color(0xFFF5DCD3),
                             shape: BoxShape.circle,
@@ -186,11 +193,11 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                               const Icon(
                                 Icons.receipt_long_rounded,
                                 color: Color(0xFFD34A26),
-                                size: 34,
+                                size: 30,
                               ),
                               Positioned(
-                                right: 12,
-                                bottom: 12,
+                                right: 10,
+                                bottom: 10,
                                 child: Container(
                                   padding: const EdgeInsets.all(3),
                                   decoration: const BoxDecoration(
@@ -201,7 +208,7 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                                     '₹',
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 10,
+                                      fontSize: 9.5,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -213,7 +220,7 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Section 1: Pending Payments
                   Row(
@@ -303,6 +310,7 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                                         fontWeight: FontWeight.bold,
                                         color: Color(0xFF221711),
                                       ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                     const SizedBox(height: 3),
                                     Text(
@@ -316,20 +324,24 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               BouncingButton(
                                 onPressed: () => _recordPayment(pending[i], false),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFE84E26),
                                     borderRadius: BorderRadius.circular(14),
                                   ),
-                                  child: const Text(
-                                    'Mark Paid',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
+                                  child: const FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      'Mark Paid',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -399,6 +411,7 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFF221711),
                                     ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
@@ -418,32 +431,36 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                                 ],
                               ),
                             ),
+                            const SizedBox(width: 8),
                             BouncingButton(
                               onPressed: () => _recordPayment(settled[i], true),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFCEEE3),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.add_circle_outline_rounded,
-                                      size: 15,
-                                      color: Color(0xFF8A3B18),
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Add Advance',
-                                      style: TextStyle(
+                                child: const FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.add_circle_outline_rounded,
+                                        size: 15,
                                         color: Color(0xFF8A3B18),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
                                       ),
-                                    ),
-                                  ],
+                                      SizedBox(width: 5),
+                                      Text(
+                                        'Add Advance',
+                                        style: TextStyle(
+                                          color: Color(0xFF8A3B18),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),

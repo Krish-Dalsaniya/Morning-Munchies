@@ -219,68 +219,82 @@ class _VendorsTabState extends State<VendorsTab> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Inputs Row
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: TextField(
-                            controller: _vendorName,
-                            style: const TextStyle(fontSize: 14),
-                            decoration: InputDecoration(
-                              hintText: 'Vendor Name (e.g....',
-                              hintStyle: const TextStyle(color: Color(0xFF9E8D8A), fontSize: 13),
-                              prefixIcon: const Icon(Icons.storefront_outlined, size: 18, color: Color(0xFF8A827A)),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                              isDense: true,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE84E26), width: 1.5),
-                              ),
+                    // Inputs (Adaptive Row / Column based on width)
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final stackInputs = constraints.maxWidth < 360;
+
+                        final nameField = TextField(
+                          controller: _vendorName,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Vendor Name (e.g. Anand Dosa)',
+                            hintStyle: const TextStyle(color: Color(0xFF9E8D8A), fontSize: 13),
+                            prefixIcon: const Icon(Icons.storefront_outlined, size: 18, color: Color(0xFF8A827A)),
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                            isDense: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE84E26), width: 1.5),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 2,
-                          child: TextField(
-                            controller: _vendorPhone,
-                            keyboardType: TextInputType.phone,
-                            style: const TextStyle(fontSize: 14),
-                            decoration: InputDecoration(
-                              hintText: 'Phone (op...',
-                              hintStyle: const TextStyle(color: Color(0xFF9E8D8A), fontSize: 13),
-                              prefixIcon: const Icon(Icons.phone_outlined, size: 18, color: Color(0xFF8A827A)),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                              isDense: true,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE84E26), width: 1.5),
-                              ),
+                        );
+
+                        final phoneField = TextField(
+                          controller: _vendorPhone,
+                          keyboardType: TextInputType.phone,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Phone (optional)',
+                            hintStyle: const TextStyle(color: Color(0xFF9E8D8A), fontSize: 13),
+                            prefixIcon: const Icon(Icons.phone_outlined, size: 18, color: Color(0xFF8A827A)),
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                            isDense: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE8DDD2)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE84E26), width: 1.5),
                             ),
                           ),
-                        ),
-                      ],
+                        );
+
+                        if (stackInputs) {
+                          return Column(
+                            children: [
+                              nameField,
+                              const SizedBox(height: 8),
+                              phoneField,
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          children: [
+                            Expanded(flex: 3, child: nameField),
+                            const SizedBox(width: 8),
+                            Expanded(flex: 2, child: phoneField),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 12),
 
@@ -424,10 +438,11 @@ class _VendorsTabState extends State<VendorsTab> {
                     Text(
                       vendorName,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF221711),
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                     if (phone != null && phone.isNotEmpty) ...[
                       const SizedBox(height: 2),
@@ -435,12 +450,15 @@ class _VendorsTabState extends State<VendorsTab> {
                         children: [
                           const Icon(Icons.phone, size: 12, color: Color(0xFF70655E)),
                           const SizedBox(width: 4),
-                          Text(
-                            phone,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF70655E),
-                              fontWeight: FontWeight.w500,
+                          Expanded(
+                            child: Text(
+                              phone,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF70655E),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -449,28 +467,33 @@ class _VendorsTabState extends State<VendorsTab> {
                   ],
                 ),
               ),
+              const SizedBox(width: 6),
               // Add Item Pill Button
               BouncingButton(
                 onPressed: () => _addItemDialog(vendorId, vendorName),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFCEEE3),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.add, size: 14, color: Color(0xFF8A3B18)),
-                      SizedBox(width: 4),
-                      Text(
-                        'Add Item',
-                        style: TextStyle(
-                          color: Color(0xFF8A3B18),
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add, size: 14, color: Color(0xFF8A3B18)),
+                        SizedBox(width: 4),
+                        Text(
+                          'Add Item',
+                          style: TextStyle(
+                            color: Color(0xFF8A3B18),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -523,6 +546,7 @@ class _VendorsTabState extends State<VendorsTab> {
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF221711),
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
                           Text(

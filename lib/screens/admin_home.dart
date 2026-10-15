@@ -331,34 +331,38 @@ class _AdminHomeState extends State<AdminHome> {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
                 'assets/images/logo.png',
-                width: 34,
-                height: 34,
+                width: 32,
+                height: 32,
                 errorBuilder: (context, error, stackTrace) => const Icon(Icons.wb_sunny, color: Colors.orange),
               ),
             ),
             const SizedBox(width: 8),
-            const Text(
-              'Morning Munchies',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF2C2420)),
+            const Flexible(
+              child: Text(
+                'Morning Munchies',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFF2C2420)),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
               decoration: BoxDecoration(
                 color: const Color(0xFFFA5A1E),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 12),
-                  SizedBox(width: 3),
-                  Text('ADMIN', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                  Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 11),
+                  SizedBox(width: 2),
+                  Text('ADMIN', style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

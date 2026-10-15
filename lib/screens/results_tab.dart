@@ -210,13 +210,17 @@ class _ResultsTabState extends State<ResultsTab> {
                     return ListView(
                       padding: const EdgeInsets.only(bottom: 40),
                       children: [
-                        // Subheader Row: Registered People count + Menu Status Pill
+                        // Subheader Row: Registered People count + Menu Status Pill (Responsive Wrap)
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 10,
+                            runSpacing: 8,
                             children: [
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const Icon(Icons.group_outlined, size: 20, color: Color(0xFF33261F)),
                                   const SizedBox(width: 8),
@@ -247,6 +251,7 @@ class _ResultsTabState extends State<ResultsTab> {
                                       ],
                                     ),
                                     child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(Icons.check_circle_outline, size: 15, color: Colors.white),
                                         SizedBox(width: 6),
@@ -270,6 +275,7 @@ class _ResultsTabState extends State<ResultsTab> {
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.credit_card_outlined, size: 15, color: Color(0xFF9E4B28)),
                                       SizedBox(width: 6),
@@ -342,230 +348,247 @@ class _ResultsTabState extends State<ResultsTab> {
 
     final imagePath = getDishImagePath(itemName);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Row: Dish Image + Item Title / Vendor / Meal + Price
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Dish Image
-              ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: Image.asset(
-                  imagePath,
-                  width: 78,
-                  height: 78,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: 78,
-                    height: 78,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3ECE2),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Icon(Icons.restaurant, color: Color(0xFFB5A99B)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 340;
+        final imgSize = isCompact ? 64.0 : 76.0;
 
-              // Title, Meal and Vendor
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      itemName,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF221711),
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.all(isCompact ? 12 : 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Row: Dish Image + Item Title / Vendor / Meal + Price
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Dish Image
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      imagePath,
+                      width: imgSize,
+                      height: imgSize,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: imgSize,
+                        height: imgSize,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3ECE2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(Icons.restaurant, color: Color(0xFFB5A99B)),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${meal.toString().toUpperCase()} • ${vendorName.toString().toUpperCase()}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF8A827A),
-                        letterSpacing: 0.4,
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Title, Meal and Vendor
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          itemName,
+                          style: TextStyle(
+                            fontSize: isCompact ? 18 : 20,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF221711),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${meal.toString().toUpperCase()} • ${vendorName.toString().toUpperCase()}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF8A827A),
+                            letterSpacing: 0.4,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Price in terracotta
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '₹${price.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: isCompact ? 16 : 18,
+                        color: const Color(0xFFC8532F),
                       ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(height: 1, thickness: 1, color: Color(0xFFF4EEE6)),
+              const SizedBox(height: 10),
+
+              // Interested (Yes) Row with Soft Green Banner
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F8F1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.thumb_up, color: Color(0xFF2E7D32), size: 15),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${yesVoters.length} Yes',
+                            style: const TextStyle(
+                              color: Color(0xFF1B5E20),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: yesVoters.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4),
+                              child: Text(
+                                'Nobody',
+                                style: TextStyle(
+                                  color: Color(0xFF8C9B8E),
+                                  fontStyle: FontStyle.italic,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            )
+                          : Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: [
+                                for (final name in yesVoters)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFDFECE1),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2D3B2F),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                     ),
                   ],
                 ),
               ),
 
-              // Price in terracotta
-              Text(
-                '₹${price.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18,
-                  color: Color(0xFFC8532F),
+              // Not Interested (No) Row with Soft Coral/Pink Banner
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDF2F0),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.thumb_down, color: Color(0xFFD32F2F), size: 15),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${noVoters.length} No',
+                            style: const TextStyle(
+                              color: Color(0xFFB71C1C),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: noVoters.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4),
+                              child: Text(
+                                'Nobody',
+                                style: TextStyle(
+                                  color: Color(0xFF9E8D8A),
+                                  fontStyle: FontStyle.italic,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            )
+                          : Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: [
+                                for (final name in noVoters)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF8E7E5),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF4A2C29),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Divider(height: 1, thickness: 1, color: Color(0xFFF4EEE6)),
-          const SizedBox(height: 12),
-
-          // Interested (Yes) Row with Soft Green Banner
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F8F1),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 80,
-                  child: Row(
-                    children: [
-                      const Icon(Icons.thumb_up, color: Color(0xFF2E7D32), size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${yesVoters.length} Yes',
-                        style: const TextStyle(
-                          color: Color(0xFF1B5E20),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: yesVoters.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                            'Nobody',
-                            style: TextStyle(
-                              color: Color(0xFF8C9B8E),
-                              fontStyle: FontStyle.italic,
-                              fontSize: 13,
-                            ),
-                          ),
-                        )
-                      : Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: [
-                            for (final name in yesVoters)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFDFECE1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  name,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF2D3B2F),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                ),
-              ],
-            ),
-          ),
-
-          // Not Interested (No) Row with Soft Coral/Pink Banner
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFDF2F0),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 80,
-                  child: Row(
-                    children: [
-                      const Icon(Icons.thumb_down, color: Color(0xFFD32F2F), size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${noVoters.length} No',
-                        style: const TextStyle(
-                          color: Color(0xFFB71C1C),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: noVoters.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                            'Nobody',
-                            style: TextStyle(
-                              color: Color(0xFF9E8D8A),
-                              fontStyle: FontStyle.italic,
-                              fontSize: 13,
-                            ),
-                          ),
-                        )
-                      : Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: [
-                            for (final name in noVoters)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF8E7E5),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  name,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF4A2C29),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
+
+

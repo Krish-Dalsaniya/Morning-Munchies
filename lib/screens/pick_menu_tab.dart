@@ -207,7 +207,7 @@ class _PickMenuTabState extends State<PickMenuTab> {
                           ),
                         ),
 
-                        // Selected Items Counter Banner
+                        // Selected Items Counter Banner (Responsive with RichText)
                         Container(
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -227,20 +227,21 @@ class _PickMenuTabState extends State<PickMenuTab> {
                                 child: const Icon(Icons.check, size: 16, color: Colors.white),
                               ),
                               const SizedBox(width: 10),
-                              Text(
-                                '$selectedCount items selected',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: Color(0xFF221711),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'out of $totalItemsCount items',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF70655E),
+                              Expanded(
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: const TextStyle(color: Color(0xFF221711), fontSize: 13.5),
+                                    children: [
+                                      TextSpan(
+                                        text: '$selectedCount items selected ',
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      TextSpan(
+                                        text: 'out of $totalItemsCount items',
+                                        style: const TextStyle(color: Color(0xFF70655E)),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
@@ -277,12 +278,15 @@ class _PickMenuTabState extends State<PickMenuTab> {
                                         size: 22,
                                       ),
                                       const SizedBox(width: 10),
-                                      Text(
-                                        vendors[i]['name'] ?? '',
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF221711),
+                                      Expanded(
+                                        child: Text(
+                                          vendors[i]['name'] ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF221711),
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],

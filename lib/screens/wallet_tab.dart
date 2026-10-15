@@ -112,14 +112,17 @@ class _WalletTabState extends State<WalletTab> {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Text(
-                          owes
-                              ? '-₹${balance.abs().toStringAsFixed(2)}'
-                              : '₹${balance.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: 38,
-                            fontWeight: FontWeight.w900,
-                            color: owes ? const Color(0xFFD34A26) : const Color(0xFF221711),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            owes
+                                ? '-₹${balance.abs().toStringAsFixed(2)}'
+                                : '₹${balance.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 38,
+                              fontWeight: FontWeight.w900,
+                              color: owes ? const Color(0xFFD34A26) : const Color(0xFF221711),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -239,6 +242,7 @@ class _WalletTabState extends State<WalletTab> {
                                             fontWeight: FontWeight.bold,
                                             color: Color(0xFF221711),
                                           ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 3),
                                         Text(
@@ -248,18 +252,23 @@ class _WalletTabState extends State<WalletTab> {
                                             color: Color(0xFF8A827A),
                                             fontWeight: FontWeight.w500,
                                           ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
                                   ),
-                                  Text(
-                                    '${isCharge ? '-' : '+'}₹${amount.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w800,
-                                      color: isCharge
-                                          ? const Color(0xFFD34A26)
-                                          : const Color(0xFF2E7D32),
+                                  const SizedBox(width: 8),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      '${isCharge ? '-' : '+'}₹${amount.toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w800,
+                                        color: isCharge
+                                            ? const Color(0xFFD34A26)
+                                            : const Color(0xFF2E7D32),
+                                      ),
                                     ),
                                   ),
                                 ],

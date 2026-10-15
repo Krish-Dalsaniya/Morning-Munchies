@@ -107,10 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Top Hero Food Illustration with gentle fade entrance
                   FadeSlideEntry(
                     index: 0,
-                    child: Image.asset(
-                      'assets/images/login_illustration.jpg',
-                      fit: BoxFit.cover,
+                    child: SizedBox(
+                      height: MediaQuery.sizeOf(context).height < 680 ? 170 : 220,
                       width: double.infinity,
+                      child: Image.asset(
+                        'assets/images/login_illustration.jpg',
+                        fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 48, bottom: 20),
@@ -147,6 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                   ),
+                ),
 
                   // Form Container
                   Padding(
