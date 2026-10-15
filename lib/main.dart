@@ -31,7 +31,36 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
         title: 'Morning Munchies',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(colorSchemeSeed: Colors.deepOrange, useMaterial3: true),
+        theme: ThemeData(
+          colorSchemeSeed: Colors.deepOrange,
+          scaffoldBackgroundColor: const Color(0xFFFBF8F3),
+          navigationBarTheme: NavigationBarThemeData(
+            backgroundColor: const Color(0xFFFBF8F3),
+            indicatorColor: const Color(0xFFFCEEE3),
+            elevation: 0,
+            iconTheme: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const IconThemeData(color: Color(0xFFC8532F));
+              }
+              return const IconThemeData(color: Color(0xFF6B5E57));
+            }),
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const TextStyle(
+                  color: Color(0xFFC8532F),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                );
+              }
+              return const TextStyle(
+                color: Color(0xFF6B5E57),
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              );
+            }),
+          ),
+          useMaterial3: true,
+        ),
         home: isSupabaseConfigured ? const AuthGate() : const SetupConfigScreen(),
       );
 }
