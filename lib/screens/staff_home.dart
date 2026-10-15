@@ -25,14 +25,17 @@ class _StaffHomeState extends State<StaffHome> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFFFBF8F3),
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Row(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
                 'assets/images/logo.png',
-                width: 32,
-                height: 32,
+                width: 34,
+                height: 34,
                 errorBuilder: (context, error, stackTrace) => const Icon(Icons.wb_sunny, color: Colors.orange),
               ),
             ),
@@ -40,25 +43,39 @@ class _StaffHomeState extends State<StaffHome> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Morning Munchies', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                const Text('Morning Munchies', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF2C2420))),
                 Text(
                   'Hi, $userName',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF8C827A)),
                 ),
               ],
             ),
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: refresh,
+          Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFFF0E8DC),
+              shape: BoxShape.circle,
+            ),
+            margin: const EdgeInsets.only(right: 6),
+            child: IconButton(
+              icon: const Icon(Icons.refresh_rounded, size: 20, color: Color(0xFF4A3E38)),
+              tooltip: 'Refresh',
+              onPressed: refresh,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign out',
-            onPressed: () => supabase.auth.signOut(),
+          Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFFF0E8DC),
+              shape: BoxShape.circle,
+            ),
+            margin: const EdgeInsets.only(right: 12),
+            child: IconButton(
+              icon: const Icon(Icons.logout_rounded, size: 20, color: Color(0xFF4A3E38)),
+              tooltip: 'Sign out',
+              onPressed: () => supabase.auth.signOut(),
+            ),
           ),
         ],
       ),

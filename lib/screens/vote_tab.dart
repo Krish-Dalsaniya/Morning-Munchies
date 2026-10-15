@@ -120,153 +120,265 @@ class _VoteTabState extends State<VoteTab> {
     }
   }
 
+  String _getDishImagePath(String itemName) {
+    final name = itemName.toLowerCase();
+    if (name.contains('vaghareli')) return 'assets/images/dishes/vaghareli_idli.png';
+    if (name.contains('mendu') || name.contains('medu')) return 'assets/images/dishes/mendu_vada.png';
+    if (name.contains('idli')) return 'assets/images/dishes/idli.png';
+    if (name.contains('thepla')) return 'assets/images/dishes/thepla.png';
+    if (name.contains('handvo') || name.contains('handva')) return 'assets/images/dishes/handvo.png';
+    if (name.contains('poha')) return 'assets/images/dishes/poha.png';
+    if (name.contains('dhokla') || name.contains('khaman')) return 'assets/images/dishes/dhokla.png';
+    if (name.contains('dal vada') || name.contains('dalvada') || name.contains('vada')) return 'assets/images/dishes/dal_vada.png';
+    if (name.contains('paratha')) return 'assets/images/dishes/paratha.png';
+    return 'assets/images/dishes/thepla.png';
+  }
+
+  String _getDishDescription(String itemName) {
+    final name = itemName.toLowerCase();
+    if (name.contains('vaghareli')) {
+      return 'Tempered idli cubes sauteed with mustard seeds, curry leaves and fresh coriander.';
+    }
+    if (name.contains('mendu') || name.contains('medu')) {
+      return 'Crispy golden medu vada served with warm sambhar and fresh coconut chutney.';
+    }
+    if (name.contains('idli')) {
+      return 'Soft and healthy idli served with spicy sambar and chutney.';
+    }
+    if (name.contains('thepla')) {
+      return 'Tasty methi thepla served with green chutney.';
+    }
+    if (name.contains('handvo') || name.contains('handva')) {
+      return 'Savory tava handvo baked with mixed lentils and vegetables, served with green chutney.';
+    }
+    if (name.contains('poha')) {
+      return 'Steamed flattened rice bowl garnished with crunchy peanuts, onions and lemon.';
+    }
+    if (name.contains('dhokla') || name.contains('khaman')) {
+      return 'Soft, fluffy steamed dhokla tempered with mustard seeds and green chilies.';
+    }
+    if (name.contains('dal vada') || name.contains('dalvada')) {
+      return 'Hot crispy fried dal vada served with spicy green chutney and fried chilies.';
+    }
+    if (name.contains('paratha')) {
+      return 'Hot and flaky stuffed paratha served with fresh curd and spicy pickle.';
+    }
+    return 'Fresh and delicious meal prepared with authentic spices and love.';
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<int>(
       valueListenable: refreshTick,
-      builder: (context, _, child) => Column(
-        children: [
-          // Date Selector Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.2))),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  tooltip: 'Previous day',
-                  onPressed: () => _changeDate(-1),
-                ),
-                Expanded(
-                  child: InkWell(
-                    onTap: _pickDate,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.calendar_today, size: 18),
-                          const SizedBox(width: 8),
-                          Text(
-                            _dateStr == todayStr() ? 'Today ($_dateStr)' : _dateStr,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                        ],
+      builder: (context, _, child) => Container(
+        color: const Color(0xFFFBF8F3), // Warm soft cream background
+        child: Column(
+          children: [
+            // Pill Date Selector
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3ECE2),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left_rounded, size: 22, color: Color(0xFF4A3E38)),
+                    tooltip: 'Previous day',
+                    onPressed: () => _changeDate(-1),
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: _pickDate,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.calendar_today_outlined, size: 17, color: Color(0xFF4A3E38)),
+                            const SizedBox(width: 8),
+                            Text(
+                              _dateStr == todayStr() ? 'Today ($_dateStr)' : _dateStr,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF2C2420)),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  tooltip: 'Next day',
-                  onPressed: () => _changeDate(1),
-                ),
-              ],
-            ),
-          ),
-
-          // Menu List
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                setState(() {
-                  _future = _load();
-                });
-                await _future;
-              },
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _future,
-                builder: (context, snap) {
-                  if (snap.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text('Error loading menu: ${snap.error}', textAlign: TextAlign.center),
-                      ),
-                    );
-                  }
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final items = snap.data ?? [];
-                  if (items.isEmpty) {
-                    return ListView(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.all(32),
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.restaurant_outlined, size: 54, color: Colors.grey),
-                              SizedBox(height: 16),
-                              Text(
-                                'No food has been picked for this date yet.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.grey, fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-
-                  final breakfastItems = items.where((m) => m['food_items']?['meal'] == 'breakfast').toList();
-                  final lunchItems = items.where((m) => m['food_items']?['meal'] == 'lunch').toList();
-
-                  return ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      if (breakfastItems.isNotEmpty) ...[
-                        _buildMealHeader('🍳 Breakfast', breakfastItems.length),
-                        for (int i = 0; i < breakfastItems.length; i++)
-                          FadeSlideEntry(
-                            index: i,
-                            child: _buildItemCard(breakfastItems[i]),
-                          ),
-                        const SizedBox(height: 16),
-                      ],
-                      if (lunchItems.isNotEmpty) ...[
-                        _buildMealHeader('🍱 Lunch', lunchItems.length),
-                        for (int i = 0; i < lunchItems.length; i++)
-                          FadeSlideEntry(
-                            index: i + breakfastItems.length,
-                            child: _buildItemCard(lunchItems[i]),
-                          ),
-                      ],
-                      const SizedBox(height: 40),
-                    ],
-                  );
-                },
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right_rounded, size: 22, color: Color(0xFF4A3E38)),
+                    tooltip: 'Next day',
+                    onPressed: () => _changeDate(1),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+
+            // Menu List
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  setState(() {
+                    _future = _load();
+                  });
+                  await _future;
+                },
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _future,
+                  builder: (context, snap) {
+                    if (snap.hasError) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text('Error loading menu: ${snap.error}', textAlign: TextAlign.center),
+                        ),
+                      );
+                    }
+                    if (snap.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFFC8532F)));
+                    }
+
+                    final items = snap.data ?? [];
+                    if (items.isEmpty) {
+                      return ListView(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.all(32),
+                            padding: const EdgeInsets.all(32),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(color: const Color(0xFFEDE5DA)),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.restaurant_outlined, size: 54, color: Color(0xFFB0A59A)),
+                                SizedBox(height: 16),
+                                Text(
+                                  'No food has been picked for this date yet.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Color(0xFF8C827A), fontSize: 16, fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+
+                    final breakfastItems = items.where((m) => m['food_items']?['meal'] == 'breakfast').toList();
+                    final lunchItems = items.where((m) => m['food_items']?['meal'] == 'lunch').toList();
+
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                      children: [
+                        if (breakfastItems.isNotEmpty) ...[
+                          _buildMealHeader(
+                            title: 'Breakfast',
+                            count: breakfastItems.length,
+                            subtitle: 'Vote for your favourite breakfast',
+                            icon: Icons.breakfast_dining_rounded,
+                          ),
+                          const SizedBox(height: 6),
+                          for (int i = 0; i < breakfastItems.length; i++)
+                            FadeSlideEntry(
+                              index: i,
+                              child: _buildItemCard(breakfastItems[i]),
+                            ),
+                          const SizedBox(height: 20),
+                        ],
+                        if (lunchItems.isNotEmpty) ...[
+                          _buildMealHeader(
+                            title: 'Lunch',
+                            count: lunchItems.length,
+                            subtitle: 'Vote for today\'s lunch meal',
+                            icon: Icons.lunch_dining_rounded,
+                          ),
+                          const SizedBox(height: 6),
+                          for (int i = 0; i < lunchItems.length; i++)
+                            FadeSlideEntry(
+                              index: i + breakfastItems.length,
+                              child: _buildItemCard(lunchItems[i]),
+                            ),
+                        ],
+                        const SizedBox(height: 40),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildMealHeader(String title, int count) {
+  Widget _buildMealHeader({
+    required String title,
+    required int count,
+    required String subtitle,
+    required IconData icon,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 8),
+      padding: const EdgeInsets.only(top: 10, bottom: 6),
       child: Row(
         children: [
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 8),
-          Chip(
-            label: Text('$count', style: const TextStyle(fontSize: 12)),
-            visualDensity: VisualDensity.compact,
-            padding: EdgeInsets.zero,
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFE8D6),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFC8532F).withValues(alpha: 0.12),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Icon(icon, color: const Color(0xFFC8532F), size: 24),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2C2420)),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3EAE0),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$count',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF8C7E72)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 12.5, color: Color(0xFF8C827A)),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -299,99 +411,184 @@ class _VoteTabState extends State<VoteTab> {
 
     return HoverLiftCard(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       color: Colors.white,
-      border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
-      hoverBorder: Border.all(color: Colors.deepOrange.withValues(alpha: 0.5), width: 1.5),
+      border: Border.all(color: const Color(0xFFEDE5DA), width: 1.2),
+      hoverBorder: Border.all(color: const Color(0xFFC8532F).withValues(alpha: 0.5), width: 1.5),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Vendor & Closed status
+          // Vendor & Status pill
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 vendorName.toUpperCase(),
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600], letterSpacing: 0.8),
-              ),
-              if (!open)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(99)),
-                  child: const Text('Voting Closed', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF8C827A),
+                  letterSpacing: 0.8,
                 ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: open ? const Color(0xFFE8F5E9) : const Color(0xFFEFEBE6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  open ? 'Voting Open' : 'Voting Closed',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: open ? const Color(0xFF2E7D32) : const Color(0xFF756C65),
+                  ),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
 
-          // Item Name & Price
+          // Main Content: Dish Info on Left, Price & Image on Right
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Left Column: Name & Description
               Expanded(
-                child: Text(itemName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-              ),
-              if (price > 0)
-                Text(
-                  '₹${price.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepOrange),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      itemName,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2C2420),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _getDishDescription(itemName),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: Color(0xFF756C65),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(width: 14),
+
+              // Right Column: Price at top, Dish Image below
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (price > 0)
+                    Text(
+                      '₹${price.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFC8532F),
+                      ),
+                    ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(
+                      _getDishImagePath(itemName),
+                      width: 120,
+                      height: 75,
+                      fit: BoxFit.cover,
+                      errorBuilder: (ctx, err, stack) => Container(
+                        width: 120,
+                        height: 75,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5EBE1),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.restaurant_rounded, color: Color(0xFFC8532F), size: 28),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
           // Vote Buttons with bouncy micro-animations
           Row(
             children: [
+              // Interested Button
               Expanded(
                 child: BouncingButton(
                   onPressed: open ? () => _vote(menu['id'], 'yes', myVote) : null,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: myVote == 'yes' ? Colors.green.withValues(alpha: 0.15) : null,
-                      side: BorderSide(
-                        color: myVote == 'yes' ? Colors.green : Colors.grey.withValues(alpha: 0.3),
-                        width: myVote == 'yes' ? 2 : 1,
+                  child: Container(
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: myVote == 'yes' ? const Color(0xFFE8F5E9) : Colors.white,
+                      border: Border.all(
+                        color: myVote == 'yes' ? const Color(0xFF2E7D32) : const Color(0xFF2E7D32).withValues(alpha: 0.7),
+                        width: myVote == 'yes' ? 1.8 : 1.2,
                       ),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onPressed: open ? () => _vote(menu['id'], 'yes', myVote) : null,
-                    icon: Icon(Icons.thumb_up, size: 18, color: myVote == 'yes' ? Colors.green : Colors.grey[700]),
-                    label: Text(
-                      'Interested',
-                      style: TextStyle(
-                        fontWeight: myVote == 'yes' ? FontWeight.bold : FontWeight.normal,
-                        color: myVote == 'yes' ? Colors.green[800] : Colors.grey[800],
-                      ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.thumb_up_rounded, size: 16, color: Color(0xFF2E7D32)),
+                        SizedBox(width: 8),
+                        Text(
+                          'Interested',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2E7D32),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
+
+              // Not Interested Button
               Expanded(
                 child: BouncingButton(
                   onPressed: open ? () => _vote(menu['id'], 'no', myVote) : null,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: myVote == 'no' ? Colors.red.withValues(alpha: 0.15) : null,
-                      side: BorderSide(
-                        color: myVote == 'no' ? Colors.red : Colors.grey.withValues(alpha: 0.3),
-                        width: myVote == 'no' ? 2 : 1,
+                  child: Container(
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: myVote == 'no' ? const Color(0xFFFFEBEE) : Colors.white,
+                      border: Border.all(
+                        color: myVote == 'no' ? const Color(0xFFC62828) : const Color(0xFFD1C7BD),
+                        width: myVote == 'no' ? 1.8 : 1.2,
                       ),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onPressed: open ? () => _vote(menu['id'], 'no', myVote) : null,
-                    icon: Icon(Icons.thumb_down, size: 18, color: myVote == 'no' ? Colors.red : Colors.grey[700]),
-                    label: Text(
-                      'Not interested',
-                      style: TextStyle(
-                        fontWeight: myVote == 'no' ? FontWeight.bold : FontWeight.normal,
-                        color: myVote == 'no' ? Colors.red[800] : Colors.grey[800],
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.thumb_down_rounded,
+                          size: 16,
+                          color: myVote == 'no' ? const Color(0xFFC62828) : const Color(0xFF6B635C),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Not interested',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                            color: myVote == 'no' ? const Color(0xFFC62828) : const Color(0xFF6B635C),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -400,13 +597,13 @@ class _VoteTabState extends State<VoteTab> {
           ),
           const SizedBox(height: 12),
 
-          // Animated Progress Bar
+          // Dual-color Animated Progress Bar
           ClipRRect(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(99),
             child: SizedBox(
               height: 6,
               child: totalVotes == 0
-                  ? Container(color: Colors.grey.withValues(alpha: 0.2))
+                  ? Container(color: const Color(0xFFE8E0D5))
                   : Row(
                       children: [
                         if (yesPercent > 0)
@@ -414,7 +611,7 @@ class _VoteTabState extends State<VoteTab> {
                             flex: (yesPercent * 1000).toInt(),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
-                              color: Colors.green,
+                              color: const Color(0xFF2E7D32),
                             ),
                           ),
                         if (noPercent > 0)
@@ -422,27 +619,31 @@ class _VoteTabState extends State<VoteTab> {
                             flex: (noPercent * 1000).toInt(),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
-                              color: Colors.red,
+                              color: const Color(0xFFE53935),
                             ),
                           ),
                       ],
                     ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
 
-          // Counts text
+          // Counts & My Vote Status
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$yesCount interested • $noCount not interested',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                '$yesCount interested  •  $noCount not interested',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF756C65)),
               ),
               if (myVote != null)
                 Text(
                   myVote == 'yes' ? 'You: Interested' : 'You: Not interested',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: myVote == 'yes' ? Colors.green : Colors.red),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: myVote == 'yes' ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                  ),
                 ),
             ],
           ),

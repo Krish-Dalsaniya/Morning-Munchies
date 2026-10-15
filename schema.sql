@@ -236,3 +236,36 @@ create policy "wallet read" on public.wallet_transactions for select to authenti
 drop policy if exists "wallet admin write" on public.wallet_transactions;
 create policy "wallet admin write" on public.wallet_transactions for all to authenticated 
   using (public.is_admin()) with check (public.is_admin());
+
+-- ========================================================
+-- 10. Sample Seed Data for Krisha Paratha Hub
+-- ========================================================
+do $$
+declare
+  v_vendor_id uuid;
+begin
+  -- Insert or get vendor
+  insert into public.vendors (name, phone)
+  values ('Krisha Paratha Hub', '+91 98765 43210')
+  on conflict (name) do update set phone = excluded.phone
+  returning id into v_vendor_id;
+
+  if v_vendor_id is null then
+    select id into v_vendor_id from public.vendors where name = 'Krisha Paratha Hub';
+  end if;
+
+  -- Insert dishes from chalkboard menu
+  insert into public.food_items (vendor_id, name, price, meal)
+  values
+    (v_vendor_id, 'Methi Thepla', 30.00, 'breakfast'),
+    (v_vendor_id, 'Dudhi Thepla', 30.00, 'breakfast'),
+    (v_vendor_id, 'Handvo', 40.00, 'breakfast'),
+    (v_vendor_id, 'Poha', 30.00, 'breakfast'),
+    (v_vendor_id, 'Idli', 40.00, 'breakfast'),
+    (v_vendor_id, 'Mendu Vada', 40.00, 'breakfast'),
+    (v_vendor_id, 'Dhokla', 40.00, 'breakfast'),
+    (v_vendor_id, 'Dal Vada', 40.00, 'breakfast'),
+    (v_vendor_id, 'Vaghareli Idli', 40.00, 'breakfast'),
+    (v_vendor_id, 'Aloo Paratha', 40.00, 'breakfast')
+  on conflict do nothing;
+end $$;

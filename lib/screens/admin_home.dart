@@ -181,40 +181,67 @@ class _AdminHomeState extends State<AdminHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFFFBF8F3),
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Row(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
                 'assets/images/logo.png',
-                width: 32,
-                height: 32,
+                width: 34,
+                height: 34,
                 errorBuilder: (context, error, stackTrace) => const Icon(Icons.wb_sunny, color: Colors.orange),
               ),
             ),
-            const SizedBox(width: 10),
-            const Text('Morning Munchies', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const SizedBox(width: 8),
+            const Text(
+              'Morning Munchies',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF2C2420)),
+            ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.deepOrange,
-                borderRadius: BorderRadius.circular(6),
+                color: const Color(0xFFFA5A1E),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text('ADMIN', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 12),
+                  SizedBox(width: 3),
+                  Text('ADMIN', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                ],
+              ),
             ),
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: refresh,
+          Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFFF0E8DC),
+              shape: BoxShape.circle,
+            ),
+            margin: const EdgeInsets.only(right: 6),
+            child: IconButton(
+              icon: const Icon(Icons.refresh_rounded, size: 20, color: Color(0xFF4A3E38)),
+              tooltip: 'Refresh',
+              onPressed: refresh,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            tooltip: 'More Options',
-            onPressed: _showMoreBottomSheet,
+          Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFFF0E8DC),
+              shape: BoxShape.circle,
+            ),
+            margin: const EdgeInsets.only(right: 12),
+            child: IconButton(
+              icon: const Icon(Icons.more_vert_rounded, size: 20, color: Color(0xFF4A3E38)),
+              tooltip: 'More Options',
+              onPressed: _showMoreBottomSheet,
+            ),
           ),
         ],
       ),
