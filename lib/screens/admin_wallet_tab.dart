@@ -462,6 +462,30 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
     }
   }
 
+  void _showUserTransactions(BuildContext context, Map<String, dynamic> userRow) {
+    final userId = userRow['user_id']?.toString() ?? '';
+    final userName = userRow['name']?.toString() ?? 'Staff Member';
+    final balance = (userRow['balance'] as num?)?.toDouble() ?? 0.0;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _AdminUserTransactionsSheet(
+        userId: userId,
+        userName: userName,
+        balance: balance,
+        onScreenshotTap: (url) {
+          _showScreenshotDialog({
+            'screenshot_url': url,
+            'user_name': userName,
+            'amount': 0,
+          });
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -913,28 +937,39 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                               ),
                               const SizedBox(width: 14),
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      pending[i]['name'] ?? '',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF221711),
+                                child: InkWell(
+                                  onTap: () => _showUserTransactions(context, pending[i]),
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              pending[i]['name'] ?? '',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF221711),
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const Icon(Icons.history_rounded, size: 16, color: Color(0xFF8A827A)),
+                                        ],
                                       ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      'Owes ₹${(-(pending[i]['balance'] as num)).toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFFD34A26),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        'Owes ₹${(-(pending[i]['balance'] as num)).toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFFD34A26),
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -1014,34 +1049,45 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                             ),
                             const SizedBox(width: 14),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    settled[i]['name'] ?? '',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF221711),
+                              child: InkWell(
+                                onTap: () => _showUserTransactions(context, settled[i]),
+                                borderRadius: BorderRadius.circular(10),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            settled[i]['name'] ?? '',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF221711),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const Icon(Icons.history_rounded, size: 16, color: Color(0xFF8A827A)),
+                                      ],
                                     ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    (settled[i]['balance'] as num) > 0.01
-                                        ? 'Credit: +₹${(settled[i]['balance'] as num).toStringAsFixed(2)}'
-                                        : 'Settled (₹0.00)',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: (settled[i]['balance'] as num) > 0.01
-                                          ? FontWeight.bold
-                                          : FontWeight.w600,
-                                      color: (settled[i]['balance'] as num) > 0.01
-                                          ? const Color(0xFF2E7D32)
-                                          : const Color(0xFF8A827A),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      (settled[i]['balance'] as num) > 0.01
+                                          ? 'Credit: +₹${(settled[i]['balance'] as num).toStringAsFixed(2)}'
+                                          : 'Settled (₹0.00)',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: (settled[i]['balance'] as num) > 0.01
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                        color: (settled[i]['balance'] as num) > 0.01
+                                            ? const Color(0xFF2E7D32)
+                                            : const Color(0xFF8A827A),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -1086,6 +1132,276 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
               );
             },
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ========================================================
+// Admin Sheet: View a Staff Member's Transactions & Proofs
+// ========================================================
+class _AdminUserTransactionsSheet extends StatefulWidget {
+  final String userId;
+  final String userName;
+  final double balance;
+  final void Function(String url) onScreenshotTap;
+
+  const _AdminUserTransactionsSheet({
+    required this.userId,
+    required this.userName,
+    required this.balance,
+    required this.onScreenshotTap,
+  });
+
+  @override
+  State<_AdminUserTransactionsSheet> createState() => _AdminUserTransactionsSheetState();
+}
+
+class _AdminUserTransactionsSheetState extends State<_AdminUserTransactionsSheet> {
+  bool _loading = true;
+  List<Map<String, dynamic>> _txns = [];
+  List<Map<String, dynamic>> _topups = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final resTxn = await supabase
+          .from('wallet_transactions')
+          .select()
+          .eq('user_id', widget.userId)
+          .order('created_at', ascending: false);
+      _txns = List<Map<String, dynamic>>.from(resTxn);
+
+      final resTopups = await supabase
+          .from('topup_requests')
+          .select()
+          .eq('user_id', widget.userId)
+          .order('created_at', ascending: false);
+      _topups = List<Map<String, dynamic>>.from(resTopups);
+    } catch (e) {
+      debugPrint('Error fetching user transactions: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String? _findScreenshot(Map<String, dynamic> txn) {
+    if (txn['screenshot_url'] != null && txn['screenshot_url'].toString().isNotEmpty) {
+      return txn['screenshot_url'].toString();
+    }
+    final txnNote = txn['note']?.toString() ?? '';
+    final txnAmount = (txn['amount'] as num?)?.toDouble() ?? 0.0;
+
+    for (final tp in _topups) {
+      final url = tp['screenshot_url']?.toString();
+      if (url != null && url.isNotEmpty) {
+        final upiRef = tp['upi_ref']?.toString();
+        if (upiRef != null && upiRef.isNotEmpty && upiRef != 'Screenshot Uploaded' && txnNote.contains(upiRef)) {
+          return url;
+        }
+      }
+    }
+
+    for (final tp in _topups) {
+      final url = tp['screenshot_url']?.toString();
+      if (url == null || url.isEmpty) continue;
+      final tpAmt = (tp['amount'] as num?)?.toDouble() ?? -1;
+      if ((tpAmt - txnAmount).abs() < 0.01) {
+        return url;
+      }
+    }
+    return null;
+  }
+
+  Widget _buildThumb(String url) {
+    if (url.startsWith('data:image')) {
+      try {
+        final base64Str = url.contains(',') ? url.split(',').last : url;
+        final bytes = base64Decode(base64Str);
+        return Image.memory(bytes, width: 44, height: 44, fit: BoxFit.cover);
+      } catch (_) {
+        return const Icon(Icons.broken_image, size: 20, color: Colors.grey);
+      }
+    }
+    return Image.network(
+      url,
+      width: 44,
+      height: 44,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 20, color: Colors.grey),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final owes = widget.balance < -0.01;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).padding.bottom + 20),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0D8D0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${widget.userName}\'s Activity',
+                        style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Color(0xFF221711)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        owes
+                            ? 'Currently owes ₹${(-widget.balance).toStringAsFixed(2)}'
+                            : 'Credit: +₹${widget.balance.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: owes ? const Color(0xFFD34A26) : const Color(0xFF2E7D32),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded, color: Color(0xFF8A827A)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // Transaction List
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator(color: Color(0xFFE84E26)))
+                  : _txns.isEmpty
+                      ? const Center(
+                          child: Text('No transaction history found for this staff member.', style: TextStyle(color: Color(0xFF8A827A))),
+                        )
+                      : ListView.separated(
+                          itemCount: _txns.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final t = _txns[index];
+                            final isCharge = t['type'] == 'charge';
+                            final note = t['note'] ?? (isCharge ? 'Food Order' : 'Payment');
+                            final amount = (t['amount'] as num).toDouble();
+                            final dateStr = t['created_at'] != null ? t['created_at'].toString().substring(0, 16).replaceAll('T', ' ') : '';
+                            final screenshot = _findScreenshot(t);
+
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFBF8F3),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFEFE8DE)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: isCharge ? const Color(0xFFFDECE8) : const Color(0xFFE8F5E9),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      isCharge ? Icons.restaurant_rounded : Icons.payments_rounded,
+                                      color: isCharge ? const Color(0xFFD34A26) : const Color(0xFF2E7D32),
+                                      size: 19,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          note,
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF221711)),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(dateStr, style: const TextStyle(fontSize: 11, color: Color(0xFF8A827A))),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  if (screenshot != null) ...[
+                                    InkWell(
+                                      onTap: () => widget.onScreenshotTap(screenshot),
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Tooltip(
+                                        message: 'Tap to view screenshot',
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              _buildThumb(screenshot),
+                                              Container(
+                                                width: 44,
+                                                height: 44,
+                                                color: Colors.black.withValues(alpha: 0.2),
+                                                child: const Icon(Icons.zoom_in, color: Colors.white, size: 20),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  Text(
+                                    '${isCharge ? '-' : '+'}₹${amount.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: isCharge ? const Color(0xFFD34A26) : const Color(0xFF2E7D32),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
         ),
       ),
     );

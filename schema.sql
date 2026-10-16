@@ -317,6 +317,8 @@ create table if not exists public.topup_requests (
 -- Ensure columns exist if table was already created
 alter table public.topup_requests add column if not exists screenshot_url text;
 alter table public.topup_requests alter column upi_ref drop not null;
+alter table public.wallet_transactions add column if not exists screenshot_url text;
+alter table public.wallet_transactions add column if not exists topup_id uuid references public.topup_requests(id) on delete set null;
 
 -- Function: Approve Top-up Request
 create or replace function public.approve_topup_request(p_request_id uuid)
@@ -341,13 +343,15 @@ begin
 
   v_desc := 'UPI Top-up (' || coalesce('Ref: ' || v_req.upi_ref, 'Screenshot Verified') || coalesce(' - ' || v_req.note, '') || ')';
 
-  -- Insert payment record into wallet_transactions
-  insert into public.wallet_transactions (user_id, type, amount, note)
+  -- Insert payment record into wallet_transactions with screenshot_url and topup_id
+  insert into public.wallet_transactions (user_id, type, amount, note, screenshot_url, topup_id)
   values (
     v_req.user_id, 
     'payment', 
     v_req.amount, 
-    v_desc
+    v_desc,
+    v_req.screenshot_url,
+    v_req.id
   );
 
   -- Update topup request status
@@ -357,6 +361,17 @@ begin
       reviewed_by = auth.uid()
   where id = p_request_id;
 end; $$;
+
+-- Backfill past approved topup screenshots into wallet_transactions if empty
+update public.wallet_transactions wt
+set screenshot_url = tr.screenshot_url,
+    topup_id = tr.id
+from public.topup_requests tr
+where wt.user_id = tr.user_id 
+  and wt.type = 'payment'
+  and tr.status = 'approved'
+  and wt.screenshot_url is null
+  and tr.screenshot_url is not null;
 
 -- Function: Reject Top-up Request
 create or replace function public.reject_topup_request(p_request_id uuid, p_reason text default null)

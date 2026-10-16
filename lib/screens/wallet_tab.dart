@@ -80,6 +80,107 @@ class _WalletTabState extends State<WalletTab> {
     return [balanceData, txns, topups, settings];
   }
 
+  String? _findScreenshotForTxn(Map<String, dynamic> txn, List<Map<String, dynamic>> topups) {
+    final directUrl = txn['screenshot_url']?.toString();
+    if (directUrl != null && directUrl.isNotEmpty) {
+      return directUrl;
+    }
+
+    final topupId = txn['topup_id']?.toString();
+    if (topupId != null && topupId.isNotEmpty) {
+      for (final tp in topups) {
+        if (tp['id']?.toString() == topupId) {
+          final url = tp['screenshot_url']?.toString();
+          if (url != null && url.isNotEmpty) return url;
+        }
+      }
+    }
+
+    final txnNote = txn['note']?.toString() ?? '';
+    final txnAmount = (txn['amount'] as num?)?.toDouble() ?? 0.0;
+    final txnTime = txn['created_at'] != null ? DateTime.tryParse(txn['created_at'].toString()) : null;
+
+    // 1. Match by upi_ref in txn note
+    for (final tp in topups) {
+      final upiRef = tp['upi_ref']?.toString();
+      final url = tp['screenshot_url']?.toString();
+      if (url != null && url.isNotEmpty) {
+        if (upiRef != null && upiRef.isNotEmpty && upiRef != 'Screenshot Uploaded' && txnNote.contains(upiRef)) {
+          return url;
+        }
+      }
+    }
+
+    // 2. Match by amount and closest timestamp
+    Map<String, dynamic>? bestMatch;
+    int minDiffSeconds = 999999999;
+    for (final tp in topups) {
+      final url = tp['screenshot_url']?.toString();
+      if (url == null || url.isEmpty) continue;
+      final tpAmount = (tp['amount'] as num?)?.toDouble() ?? -1;
+      if ((tpAmount - txnAmount).abs() < 0.01) {
+        if (txnTime != null && tp['created_at'] != null) {
+          final tpTime = DateTime.tryParse(tp['created_at'].toString());
+          if (tpTime != null) {
+            final diff = (tpTime.difference(txnTime).inSeconds).abs();
+            if (diff < minDiffSeconds) {
+              minDiffSeconds = diff;
+              bestMatch = tp;
+            }
+          }
+        } else {
+          bestMatch ??= tp;
+        }
+      }
+    }
+
+    return bestMatch?['screenshot_url']?.toString();
+  }
+
+  void _showTransactionDetails(BuildContext context, Map<String, dynamic> txn, List<Map<String, dynamic>> topups) {
+    final isCharge = txn['type'] == 'charge';
+    final amount = (txn['amount'] as num?)?.toDouble() ?? 0.0;
+    final note = txn['note']?.toString() ?? (isCharge ? 'Food Order' : 'Wallet Payment');
+    final createdAt = txn['created_at'];
+    final screenshotUrl = _findScreenshotForTxn(txn, topups);
+    final txnId = txn['id']?.toString() ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _TransactionDetailsSheet(
+        isCharge: isCharge,
+        amount: amount,
+        note: note,
+        createdAt: createdAt,
+        screenshotUrl: screenshotUrl,
+        txnId: txnId,
+      ),
+    );
+  }
+
+  void _showPendingTopupDetails(BuildContext context, Map<String, dynamic> pt) {
+    final amount = (pt['amount'] as num?)?.toDouble() ?? 0.0;
+    final upiRef = pt['upi_ref']?.toString();
+    final note = pt['note']?.toString();
+    final createdAt = pt['created_at'];
+    final screenshotUrl = pt['screenshot_url']?.toString();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _PendingTopupSheet(
+        amount: amount,
+        upiRef: upiRef,
+        note: note,
+        createdAt: createdAt,
+        screenshotUrl: screenshotUrl,
+      ),
+    );
+  }
+
   void _showAddMoneySheet(Map<String, String> settings) {
     final upiId = settings['admin_upi_id'] ?? 'kotechashalini-1@okicici';
     final payeeName = settings['admin_payee_name'] ?? 'shalini Kotecha';
@@ -264,68 +365,83 @@ class _WalletTabState extends State<WalletTab> {
                     ),
                   ),
 
-                  // Pending Top-up Alerts
+                  // Pending Top-up Alerts (Clickable to view proof)
                   if (pendingTopups.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     for (final pt in pendingTopups)
-                      Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF8E7),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _showPendingTopupDetails(context, pt),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFFFE082), width: 1.2),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFFFECC0),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFC77700), size: 20),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF8E7),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFFFE082), width: 1.2),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFFFECC0),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFC77700), size: 20),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        'Top-up: +₹${(pt['amount'] as num).toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: Color(0xFF5E3900),
-                                        ),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Top-up: +₹${(pt['amount'] as num).toStringAsFixed(2)}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                              color: Color(0xFF5E3900),
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFFFECC0),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: const Text(
+                                              'Pending Approval',
+                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC77700)),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFFFECC0),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Text(
-                                          'Pending Approval',
-                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFC77700)),
-                                        ),
+                                      const SizedBox(height: 3),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              pt['screenshot_url'] != null
+                                                  ? '📸 Screenshot attached • Tap to view'
+                                                  : 'Ref: ${pt['upi_ref'] ?? 'Payment submitted'}',
+                                              style: const TextStyle(fontSize: 12, color: Color(0xFF8A6830)),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFFC77700)),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    pt['screenshot_url'] != null
-                                        ? '📸 Screenshot attached'
-                                        : 'Ref: ${pt['upi_ref'] ?? 'Payment submitted'}',
-                                    style: const TextStyle(fontSize: 12, color: Color(0xFF8A6830)),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                   ],
@@ -333,13 +449,27 @@ class _WalletTabState extends State<WalletTab> {
                   const SizedBox(height: 24),
 
                   // Transaction History Title
-                  const Text(
-                    'Transaction History',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF221711),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Transaction History',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF221711),
+                        ),
+                      ),
+                      if (txns.isNotEmpty)
+                        Text(
+                          '${txns.length} total',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF8A827A),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 12),
 
@@ -370,86 +500,137 @@ class _WalletTabState extends State<WalletTab> {
                           final dateStr = t['created_at'] != null
                               ? t['created_at'].toString().substring(0, 10)
                               : '';
+                          final screenshotUrl = _findScreenshotForTxn(t, topups);
+                          final hasProof = screenshotUrl != null && screenshotUrl.isNotEmpty;
 
                           return FadeSlideEntry(
                             index: i,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 5),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _showTransactionDetails(context, t, topups),
                                 borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: isCharge
-                                          ? const Color(0xFFFDECE8)
-                                          : const Color(0xFFE8F5E9),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      isCharge
-                                          ? Icons.restaurant_rounded
-                                          : Icons.payments_rounded,
-                                      color: isCharge
-                                          ? const Color(0xFFD34A26)
-                                          : const Color(0xFF2E7D32),
-                                      size: 22,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          note,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF221711),
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          dateStr,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xFF8A827A),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      '${isCharge ? '-' : '+'}₹${amount.toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w800,
-                                        color: isCharge
-                                            ? const Color(0xFFD34A26)
-                                            : const Color(0xFF2E7D32),
+                                splashColor: const Color(0xFFE84E26).withValues(alpha: 0.08),
+                                highlightColor: const Color(0xFFE84E26).withValues(alpha: 0.04),
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(vertical: 5),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.03),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ],
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: isCharge
+                                              ? const Color(0xFFFDECE8)
+                                              : const Color(0xFFE8F5E9),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          isCharge
+                                              ? Icons.restaurant_rounded
+                                              : Icons.payments_rounded,
+                                          color: isCharge
+                                              ? const Color(0xFFD34A26)
+                                              : const Color(0xFF2E7D32),
+                                          size: 22,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              note,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF221711),
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  dateStr,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Color(0xFF8A827A),
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                if (hasProof) ...[
+                                                  const SizedBox(width: 8),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(0xFFE8F5E9),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: const Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Icon(Icons.photo_camera_rounded, size: 10, color: Color(0xFF2E7D32)),
+                                                        SizedBox(width: 3),
+                                                        Text(
+                                                          'Proof',
+                                                          style: TextStyle(
+                                                            fontSize: 10.5,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: Color(0xFF2E7D32),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              '${isCharge ? '-' : '+'}₹${amount.toStringAsFixed(2)}',
+                                              style: TextStyle(
+                                                fontSize: 17,
+                                                fontWeight: FontWeight.w800,
+                                                color: isCharge
+                                                    ? const Color(0xFFD34A26)
+                                                    : const Color(0xFF2E7D32),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          const Icon(
+                                            Icons.chevron_right_rounded,
+                                            size: 16,
+                                            color: Color(0xFFC7BEB5),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           );
@@ -1014,3 +1195,827 @@ class _AddMoneyModalState extends State<_AddMoneyModal> {
     );
   }
 }
+
+// ========================================================
+// Helper: Format DateTime to human-readable string
+// ========================================================
+String _formatDateTime(dynamic timestamp) {
+  if (timestamp == null) return '';
+  try {
+    final dt = DateTime.parse(timestamp.toString()).toLocal();
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final hour = dt.hour == 0 ? 12 : (dt.hour > 12 ? dt.hour - 12 : dt.hour);
+    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+    final min = dt.minute.toString().padLeft(2, '0');
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}, $hour:$min $ampm';
+  } catch (_) {
+    return timestamp.toString();
+  }
+}
+
+// ========================================================
+// Helper: Build Screenshot widget for Base64 or Network URL
+// ========================================================
+Widget _buildScreenshotWidget(String url, {double? width, double? height, BoxFit fit = BoxFit.cover}) {
+  if (url.startsWith('data:image')) {
+    try {
+      final base64Str = url.contains(',') ? url.split(',').last : url;
+      final bytes = base64Decode(base64Str);
+      return Image.memory(
+        bytes,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: width,
+          height: height,
+          color: const Color(0xFFF5F3EF),
+          alignment: Alignment.center,
+          child: const Icon(Icons.broken_image_rounded, color: Colors.grey),
+        ),
+      );
+    } catch (e) {
+      return Container(
+        width: width,
+        height: height,
+        color: const Color(0xFFF5F3EF),
+        alignment: Alignment.center,
+        child: const Icon(Icons.broken_image_rounded, color: Colors.grey),
+      );
+    }
+  }
+  return Image.network(
+    url,
+    width: width,
+    height: height,
+    fit: fit,
+    errorBuilder: (context, error, stackTrace) => Container(
+      width: width,
+      height: height,
+      color: const Color(0xFFF5F3EF),
+      alignment: Alignment.center,
+      child: const Icon(Icons.broken_image_rounded, color: Colors.grey),
+    ),
+  );
+}
+
+// ========================================================
+// Fullscreen Zoomable Screenshot Dialog
+// ========================================================
+void _showFullScreenScreenshot(BuildContext context, String imageUrl, String title) {
+  showDialog(
+    context: context,
+    builder: (ctx) => Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 720),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                color: const Color(0xFF221711),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.receipt_rounded, color: Color(0xFFFF8A65), size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Colors.white),
+                      onPressed: () => Navigator.pop(ctx),
+                      constraints: const BoxConstraints(),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
+              ),
+              // Interactive Viewer (Pinch/Zoom)
+              Expanded(
+                child: Container(
+                  color: const Color(0xFF141414),
+                  alignment: Alignment.center,
+                  child: InteractiveViewer(
+                    minScale: 1.0,
+                    maxScale: 4.5,
+                    child: _buildScreenshotWidget(imageUrl, fit: BoxFit.contain),
+                  ),
+                ),
+              ),
+              // Footer
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: const Color(0xFFFBF8F3),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.pinch_rounded, size: 16, color: Color(0xFF70655E)),
+                        SizedBox(width: 6),
+                        Text(
+                          'Pinch or drag to zoom & inspect',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF70655E), fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Close', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFE84E26))),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+// ========================================================
+// Modal Sheet: Transaction Details & Screenshot Proof
+// ========================================================
+class _TransactionDetailsSheet extends StatelessWidget {
+  final bool isCharge;
+  final double amount;
+  final String note;
+  final dynamic createdAt;
+  final String? screenshotUrl;
+  final String txnId;
+
+  const _TransactionDetailsSheet({
+    required this.isCharge,
+    required this.amount,
+    required this.note,
+    required this.createdAt,
+    required this.screenshotUrl,
+    required this.txnId,
+  });
+
+  void _copyToClipboard(BuildContext context, String text, String label) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$label copied to clipboard'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: const Color(0xFF2E7D32),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasProof = screenshotUrl != null && screenshotUrl!.isNotEmpty;
+    final formattedTime = _formatDateTime(createdAt);
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).padding.bottom + 20),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Top Drag Handle
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0D8D0),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Header Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Transaction Details',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF221711)),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Receipt, timestamp & payment proof',
+                        style: TextStyle(fontSize: 12.5, color: Color(0xFF8A827A)),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded, color: Color(0xFF8A827A)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+
+              // Big Amount & Status Card
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                decoration: BoxDecoration(
+                  color: isCharge ? const Color(0xFFFDECE8) : const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: isCharge ? const Color(0xFFF5C6BA) : const Color(0xFFC8E6C9),
+                    width: 1.2,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    // Icon Circle
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: isCharge ? const Color(0xFFF5DCD3) : const Color(0xFFC8E6C9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isCharge ? Icons.restaurant_rounded : Icons.payments_rounded,
+                        color: isCharge ? const Color(0xFFD34A26) : const Color(0xFF2E7D32),
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      '${isCharge ? '-' : '+'}₹${amount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        color: isCharge ? const Color(0xFFD34A26) : const Color(0xFF2E7D32),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(99),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isCharge ? Icons.check_circle_rounded : Icons.verified_rounded,
+                            size: 14,
+                            color: isCharge ? const Color(0xFFD34A26) : const Color(0xFF2E7D32),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            isCharge ? 'Order Charge • Settled' : 'Top-up Credit • Verified',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isCharge ? const Color(0xFFD34A26) : const Color(0xFF2E7D32),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // Payment Screenshot Section (if available)
+              if (hasProof) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBF8F3),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFEFE8DE), width: 1.2),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.photo_library_rounded, size: 18, color: Color(0xFFE84E26)),
+                              SizedBox(width: 8),
+                              Text(
+                                'Payment Screenshot Proof',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF221711),
+                                ),
+                              ),
+                            ],
+                          ),
+                          InkWell(
+                            onTap: () => _showFullScreenScreenshot(context, screenshotUrl!, 'Payment Proof'),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFDECE8),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.fullscreen_rounded, size: 15, color: Color(0xFFE84E26)),
+                                  SizedBox(width: 3),
+                                  Text(
+                                    'Zoom',
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFE84E26)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: () => _showFullScreenScreenshot(context, screenshotUrl!, 'Payment Proof'),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Container(
+                                width: double.infinity,
+                                height: 210,
+                                color: Colors.white,
+                                alignment: Alignment.center,
+                                child: _buildScreenshotWidget(
+                                  screenshotUrl!,
+                                  width: double.infinity,
+                                  height: 210,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 10,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.72),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.zoom_in_rounded, size: 14, color: Colors.white),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      'Tap to view fullscreen & pinch zoom',
+                                      style: TextStyle(fontSize: 11.5, color: Colors.white, fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Detailed Attributes Card
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFEFE8DE)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _buildDetailRow(
+                      icon: Icons.category_rounded,
+                      label: 'Type',
+                      value: isCharge ? 'Food Order Charge' : 'Wallet Deposit / Top-up',
+                    ),
+                    const Divider(height: 1, color: Color(0xFFF2ECE4)),
+                    _buildDetailRow(
+                      icon: Icons.calendar_today_rounded,
+                      label: 'Date & Time',
+                      value: formattedTime.isNotEmpty ? formattedTime : 'Unknown date',
+                    ),
+                    const Divider(height: 1, color: Color(0xFFF2ECE4)),
+                    _buildDetailRow(
+                      icon: Icons.description_rounded,
+                      label: 'Description / Note',
+                      value: note,
+                      canCopy: true,
+                      onCopy: () => _copyToClipboard(context, note, 'Description'),
+                    ),
+                    if (txnId.isNotEmpty) ...[
+                      const Divider(height: 1, color: Color(0xFFF2ECE4)),
+                      _buildDetailRow(
+                        icon: Icons.tag_rounded,
+                        label: 'Transaction ID',
+                        value: txnId,
+                        canCopy: true,
+                        onCopy: () => _copyToClipboard(context, txnId, 'Transaction ID'),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Close Button
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF221711),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Close Details', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool canCopy = false,
+    VoidCallback? onCopy,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: const Color(0xFF70655E)),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF8A827A), fontWeight: FontWeight.w500),
+            ),
+          ),
+          Expanded(
+            child: SelectableText(
+              value,
+              style: const TextStyle(fontSize: 13.5, color: Color(0xFF221711), fontWeight: FontWeight.w600),
+            ),
+          ),
+          if (canCopy && onCopy != null)
+            InkWell(
+              onTap: onCopy,
+              borderRadius: BorderRadius.circular(6),
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.copy_rounded, size: 15, color: Color(0xFFE84E26)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ========================================================
+// Modal Sheet: Pending Top-up Request Details
+// ========================================================
+class _PendingTopupSheet extends StatelessWidget {
+  final double amount;
+  final String? upiRef;
+  final String? note;
+  final dynamic createdAt;
+  final String? screenshotUrl;
+
+  const _PendingTopupSheet({
+    required this.amount,
+    required this.upiRef,
+    required this.note,
+    required this.createdAt,
+    required this.screenshotUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasProof = screenshotUrl != null && screenshotUrl!.isNotEmpty;
+    final formattedTime = _formatDateTime(createdAt);
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).padding.bottom + 20),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Top Drag Handle
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0D8D0),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Pending Top-up',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF221711)),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Awaiting Admin approval',
+                        style: TextStyle(fontSize: 12.5, color: Color(0xFF8A827A)),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded, color: Color(0xFF8A827A)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Amber Card
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E7),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: const Color(0xFFFFE082), width: 1.2),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFECC0),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.hourglass_top_rounded,
+                        color: Color(0xFFC77700),
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      '+₹${amount.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF5E3900),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFECC0),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: const Text(
+                        'Pending Admin Approval',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFC77700)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Shalini Kotecha will verify this payment in their UPI account and credit your wallet.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12.5, color: Color(0xFF8A6830)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Screenshot Proof
+              if (hasProof) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBF8F3),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFEFE8DE)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.photo_camera_rounded, size: 18, color: Color(0xFFC77700)),
+                              SizedBox(width: 8),
+                              Text(
+                                'Uploaded Payment Proof',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF221711)),
+                              ),
+                            ],
+                          ),
+                          InkWell(
+                            onTap: () => _showFullScreenScreenshot(context, screenshotUrl!, 'Payment Proof'),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFECC0),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.fullscreen_rounded, size: 14, color: Color(0xFFC77700)),
+                                  SizedBox(width: 3),
+                                  Text(
+                                    'Zoom',
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF5E3900)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: () => _showFullScreenScreenshot(context, screenshotUrl!, 'Payment Proof'),
+                        borderRadius: BorderRadius.circular(14),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            width: double.infinity,
+                            height: 200,
+                            color: Colors.white,
+                            alignment: Alignment.center,
+                            child: _buildScreenshotWidget(
+                              screenshotUrl!,
+                              width: double.infinity,
+                              height: 200,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Info card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFEFE8DE)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF70655E)),
+                        const SizedBox(width: 10),
+                        const Text('Submitted At:', style: TextStyle(fontSize: 13, color: Color(0xFF8A827A))),
+                        const Spacer(),
+                        Text(formattedTime, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF221711))),
+                      ],
+                    ),
+                    if (upiRef != null && upiRef!.isNotEmpty && upiRef != 'Screenshot Uploaded') ...[
+                      const Divider(height: 18, color: Color(0xFFF2ECE4)),
+                      Row(
+                        children: [
+                          const Icon(Icons.pin_rounded, size: 16, color: Color(0xFF70655E)),
+                          const SizedBox(width: 10),
+                          const Text('UPI Ref / UTR:', style: TextStyle(fontSize: 13, color: Color(0xFF8A827A))),
+                          const Spacer(),
+                          SelectableText(upiRef!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF221711))),
+                        ],
+                      ),
+                    ],
+                    if (note != null && note!.isNotEmpty) ...[
+                      const Divider(height: 18, color: Color(0xFFF2ECE4)),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.notes_rounded, size: 16, color: Color(0xFF70655E)),
+                          const SizedBox(width: 10),
+                          const Text('Note:', style: TextStyle(fontSize: 13, color: Color(0xFF8A827A))),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              note!,
+                              textAlign: TextAlign.end,
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF221711)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF221711),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Close', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
