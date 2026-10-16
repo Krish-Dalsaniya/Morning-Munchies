@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core.dart';
 import '../widgets/interactive_effects.dart';
+import '../widgets/voters_list_modal.dart';
 
 class ResultsTab extends StatefulWidget {
   const ResultsTab({super.key});
@@ -443,144 +444,192 @@ class _ResultsTabState extends State<ResultsTab> {
               const Divider(height: 1, thickness: 1, color: Color(0xFFF4EEE6)),
               const SizedBox(height: 10),
 
-              // Interested (Yes) Row with Soft Green Banner
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0F8F1),
+              // Interested (Yes) Row with Soft Green Banner (Clickable)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => showVotersModal(
+                    context: context,
+                    itemName: itemName,
+                    meal: meal,
+                    vendorName: vendorName,
+                    yesVoters: yesVoters,
+                    noVoters: noVoters,
+                    initialTab: 'yes',
+                  ),
                   borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.thumb_up, color: Color(0xFF2E7D32), size: 15),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${yesVoters.length} Yes',
-                            style: const TextStyle(
-                              color: Color(0xFF1B5E20),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13.5,
-                            ),
-                          ),
-                        ],
-                      ),
+                  splashColor: const Color(0xFF2E7D32).withValues(alpha: 0.1),
+                  highlightColor: const Color(0xFF2E7D32).withValues(alpha: 0.05),
+                  child: Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F8F1),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFC8E6C9), width: 1),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: yesVoters.isEmpty
-                          ? const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 4),
-                              child: Text(
-                                'Nobody',
-                                style: TextStyle(
-                                  color: Color(0xFF8C9B8E),
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 13,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.thumb_up, color: Color(0xFF2E7D32), size: 15),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${yesVoters.length} Yes',
+                                style: const TextStyle(
+                                  color: Color(0xFF1B5E20),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.5,
                                 ),
                               ),
-                            )
-                          : Wrap(
-                              spacing: 6,
-                              runSpacing: 4,
-                              children: [
-                                for (final name in yesVoters)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFDFECE1),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      name,
-                                      style: const TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF2D3B2F),
-                                      ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: yesVoters.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                  child: Text(
+                                    'Nobody',
+                                    style: TextStyle(
+                                      color: Color(0xFF8C9B8E),
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 13,
                                     ),
                                   ),
-                              ],
-                            ),
+                                )
+                              : Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: [
+                                    for (final name in yesVoters)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFDFECE1),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          name,
+                                          style: const TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF2D3B2F),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: Color(0xFF2E7D32),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
 
-              // Not Interested (No) Row with Soft Coral/Pink Banner
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFDF2F0),
+              // Not Interested (No) Row with Soft Coral/Pink Banner (Clickable)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => showVotersModal(
+                    context: context,
+                    itemName: itemName,
+                    meal: meal,
+                    vendorName: vendorName,
+                    yesVoters: yesVoters,
+                    noVoters: noVoters,
+                    initialTab: 'no',
+                  ),
                   borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.thumb_down, color: Color(0xFFD32F2F), size: 15),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${noVoters.length} No',
-                            style: const TextStyle(
-                              color: Color(0xFFB71C1C),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13.5,
-                            ),
-                          ),
-                        ],
-                      ),
+                  splashColor: const Color(0xFFD32F2F).withValues(alpha: 0.1),
+                  highlightColor: const Color(0xFFD32F2F).withValues(alpha: 0.05),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFDF2F0),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFFFCDD2), width: 1),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: noVoters.isEmpty
-                          ? const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 4),
-                              child: Text(
-                                'Nobody',
-                                style: TextStyle(
-                                  color: Color(0xFF9E8D8A),
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 13,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.thumb_down, color: Color(0xFFD32F2F), size: 15),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${noVoters.length} No',
+                                style: const TextStyle(
+                                  color: Color(0xFFB71C1C),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.5,
                                 ),
                               ),
-                            )
-                          : Wrap(
-                              spacing: 6,
-                              runSpacing: 4,
-                              children: [
-                                for (final name in noVoters)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF8E7E5),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      name,
-                                      style: const TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF4A2C29),
-                                      ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: noVoters.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 4),
+                                  child: Text(
+                                    'Nobody',
+                                    style: TextStyle(
+                                      color: Color(0xFF9E8D8A),
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 13,
                                     ),
                                   ),
-                              ],
-                            ),
+                                )
+                              : Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: [
+                                    for (final name in noVoters)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFF8E7E5),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          name,
+                                          style: const TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF4A2C29),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: Color(0xFFD32F2F),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ],

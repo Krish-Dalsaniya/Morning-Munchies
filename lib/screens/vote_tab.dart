@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core.dart';
 import '../widgets/interactive_effects.dart';
+import '../widgets/voters_list_modal.dart';
 
 class VoteTab extends StatefulWidget {
   const VoteTab({super.key});
@@ -396,8 +397,16 @@ class _VoteTabState extends State<VoteTab> {
     final open = menu['status'] == 'open';
 
     final votes = List<Map<String, dynamic>>.from(menu['votes'] ?? []);
-    final yesCount = votes.where((v) => v['response'] == 'yes').length;
-    final noCount = votes.where((v) => v['response'] == 'no').length;
+    final yesVoters = votes
+        .where((v) => v['response'] == 'yes')
+        .map((v) => v['profiles']?['name'] as String? ?? 'Someone')
+        .toList();
+    final noVoters = votes
+        .where((v) => v['response'] == 'no')
+        .map((v) => v['profiles']?['name'] as String? ?? 'Someone')
+        .toList();
+    final yesCount = yesVoters.length;
+    final noCount = noVoters.length;
     final totalVotes = yesCount + noCount;
 
     final myVoteObj = votes.firstWhere(
@@ -654,10 +663,41 @@ class _VoteTabState extends State<VoteTab> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Flexible(
-                    child: Text(
-                      '$yesCount interested  •  $noCount not interested',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF756C65)),
-                      overflow: TextOverflow.ellipsis,
+                    child: InkWell(
+                      onTap: totalVotes > 0
+                          ? () => showVotersModal(
+                                context: context,
+                                itemName: itemName,
+                                meal: food['meal'] ?? 'Breakfast',
+                                vendorName: vendorName,
+                                yesVoters: yesVoters,
+                                noVoters: noVoters,
+                                initialTab: 'yes',
+                              )
+                          : null,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '$yesCount interested  •  $noCount not interested',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: const Color(0xFF756C65),
+                                decoration: totalVotes > 0 ? TextDecoration.underline : TextDecoration.none,
+                                decorationColor: const Color(0xFFC7BEB5),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (totalVotes > 0) ...[
+                              const SizedBox(width: 4),
+                              const Icon(Icons.people_alt_outlined, size: 13, color: Color(0xFF756C65)),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   if (myVote != null) ...[
