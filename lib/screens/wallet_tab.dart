@@ -209,6 +209,8 @@ class _WalletTabState extends State<WalletTab> {
       child: ValueListenableBuilder<int>(
         valueListenable: refreshTick,
         builder: (context, _, child) => RefreshIndicator(
+          color: const Color(0xFFE94B0C),
+          backgroundColor: Colors.white,
           onRefresh: () async {
             setState(() {
               _future = _load();
@@ -219,15 +221,21 @@ class _WalletTabState extends State<WalletTab> {
             future: _future,
             builder: (context, snap) {
               if (snap.hasError) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text('Error loading wallet: ${snap.error}', textAlign: TextAlign.center),
-                  ),
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    CheerfulEmptyState(
+                      icon: Icons.error_outline_rounded,
+                      title: 'Wallet Unavailable',
+                      message: '${snap.error}\nPull down to retry.',
+                      actionLabel: 'Try Again',
+                      onAction: () => setState(() => _future = _load()),
+                    ),
+                  ],
                 );
               }
               if (snap.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator(color: Color(0xFFE84E26)));
+                return const ShimmerWalletList();
               }
 
               final balanceData = snap.data?[0] as Map<String, dynamic>?;
@@ -241,6 +249,7 @@ class _WalletTabState extends State<WalletTab> {
               final advance = balance > 0.01;
 
               return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
                 children: [
                   // Modern Account Balance Card
@@ -474,20 +483,10 @@ class _WalletTabState extends State<WalletTab> {
                   const SizedBox(height: 12),
 
                   if (txns.isEmpty)
-                    Container(
-                      margin: const EdgeInsets.only(top: 8),
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFEFE8DE)),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'No transactions yet.',
-                          style: TextStyle(color: Color(0xFF70655E)),
-                        ),
-                      ),
+                    const CheerfulEmptyState(
+                      icon: Icons.receipt_long_rounded,
+                      title: 'No Transactions Yet',
+                      message: 'Whenever you order delicious office snacks or submit top-up payments, your complete history will show up here.',
                     )
                   else
                     for (int i = 0; i < txns.length; i++) ...[

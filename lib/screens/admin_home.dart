@@ -345,7 +345,7 @@ class _AdminHomeState extends State<AdminHome> {
             const SizedBox(width: 8),
             const Flexible(
               child: Text(
-                'Morning Munchies',
+                'Office Munchies',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFF2C2420)),
                 overflow: TextOverflow.ellipsis,
               ),

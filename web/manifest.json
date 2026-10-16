@@ -1,11 +1,11 @@
 {
-    "name": "Morning Munchies",
-    "short_name": "Morning Munchies",
+    "name": "Office Munchies",
+    "short_name": "Office Munchies",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FF5722",
     "theme_color": "#FF5722",
-    "description": "Morning Munchies - Food Voting and Ordering App",
+    "description": "Office Munchies - Food Voting and Ordering App",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

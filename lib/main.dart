@@ -29,7 +29,7 @@ class App extends StatelessWidget {
   const App({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Morning Munchies',
+        title: 'Office Munchies',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorSchemeSeed: Colors.deepOrange,

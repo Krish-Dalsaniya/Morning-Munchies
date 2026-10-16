@@ -222,6 +222,8 @@ class _VoteTabState extends State<VoteTab> {
             // Menu List
             Expanded(
               child: RefreshIndicator(
+                color: const Color(0xFFE94B0C),
+                backgroundColor: Colors.white,
                 onRefresh: () async {
                   setState(() {
                     _future = _load();
@@ -232,41 +234,38 @@ class _VoteTabState extends State<VoteTab> {
                   future: _future,
                   builder: (context, snap) {
                     if (snap.hasError) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Text('Error loading menu: ${snap.error}', textAlign: TextAlign.center),
-                        ),
+                      return ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          CheerfulEmptyState(
+                            icon: Icons.error_outline_rounded,
+                            title: 'Could Not Load Menu',
+                            message: '${snap.error}\nPull down to retry.',
+                            actionLabel: 'Try Again',
+                            onAction: () => setState(() => _future = _load()),
+                          ),
+                        ],
                       );
                     }
                     if (snap.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: Color(0xFFC8532F)));
+                      return const ShimmerDishList(count: 3);
                     }
 
                     final items = snap.data ?? [];
                     if (items.isEmpty) {
                       return ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         children: [
-                          Container(
-                            margin: const EdgeInsets.all(32),
-                            padding: const EdgeInsets.all(32),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(color: const Color(0xFFEDE5DA)),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.restaurant_outlined, size: 54, color: Color(0xFFB0A59A)),
-                                SizedBox(height: 16),
-                                Text(
-                                  'No food has been picked for this date yet.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Color(0xFF8C827A), fontSize: 16, fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
+                          CheerfulEmptyState(
+                            icon: Icons.soup_kitchen_rounded,
+                            title: 'The Kitchen is Preparing!',
+                            message: 'No dishes have been picked for ${_dateStr == todayStr() ? "today" : _dateStr} yet.\nCheck back soon or pull down to refresh!',
+                            actionLabel: 'Refresh Menu',
+                            onAction: () {
+                              setState(() {
+                                _future = _load();
+                              });
+                            },
                           ),
                         ],
                       );
@@ -276,6 +275,7 @@ class _VoteTabState extends State<VoteTab> {
                     final lunchItems = items.where((m) => m['food_items']?['meal'] == 'lunch').toList();
 
                     return ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                       children: [
                         if (breakfastItems.isNotEmpty) ...[

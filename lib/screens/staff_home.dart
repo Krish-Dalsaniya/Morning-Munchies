@@ -47,7 +47,7 @@ class _StaffHomeState extends State<StaffHome> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'Morning Munchies',
+                    'Office Munchies',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2C2420)),
                     overflow: TextOverflow.ellipsis,
                   ),

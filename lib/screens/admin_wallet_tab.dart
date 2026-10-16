@@ -493,6 +493,8 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
       child: ValueListenableBuilder<int>(
         valueListenable: refreshTick,
         builder: (context, _, child) => RefreshIndicator(
+          color: const Color(0xFFE94B0C),
+          backgroundColor: Colors.white,
           onRefresh: () async {
             setState(() {
               _future = _load();
@@ -502,9 +504,22 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
           child: FutureBuilder<Map<String, dynamic>>(
             future: _future,
             builder: (context, snap) {
-              if (snap.hasError) return Center(child: Text('Error: ${snap.error}'));
+              if (snap.hasError) {
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    CheerfulEmptyState(
+                      icon: Icons.error_outline_rounded,
+                      title: 'Error Loading Overview',
+                      message: '${snap.error}\nPull down to retry.',
+                      actionLabel: 'Try Again',
+                      onAction: () => setState(() => _future = _load()),
+                    ),
+                  ],
+                );
+              }
               if (snap.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator(color: Color(0xFFE84E26)));
+                return const ShimmerWalletList();
               }
 
               final data = snap.data ?? {};
@@ -518,6 +533,7 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
               final totalOwed = pending.fold<double>(0, (sum, r) => sum - (r['balance'] as num).toDouble());
 
               return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
                 children: [
                   // Top Row with UPI Settings button
@@ -897,18 +913,10 @@ class _AdminWalletTabState extends State<AdminWalletTab> {
                   const SizedBox(height: 12),
 
                   if (pending.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          '🎉 Everyone is settled up! No pending payments.',
-                          style: TextStyle(color: Color(0xFF70655E)),
-                        ),
-                      ),
+                    const CheerfulEmptyState(
+                      icon: Icons.celebration_rounded,
+                      title: 'All Cleared!',
+                      message: 'Everyone is completely settled up. There are no outstanding payments due at this time.',
                     )
                   else
                     for (int i = 0; i < pending.length; i++) ...[
