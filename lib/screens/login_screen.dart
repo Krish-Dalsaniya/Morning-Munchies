@@ -153,10 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Form Container
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
                     child: FadeSlideEntry(
                       index: 1,
                       child: Column(

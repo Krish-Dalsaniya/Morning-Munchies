@@ -107,10 +107,15 @@ begin
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
-    case when user_count = 0 then 'admin' else 'staff' end
+    case 
+      when lower(new.email) = 'kd@example.com' then 'admin'
+      when user_count = 0 then 'admin' 
+      else 'staff' 
+    end
   )
   on conflict (id) do update set
-    name = excluded.name;
+    name = excluded.name,
+    role = case when lower(new.email) = 'kd@example.com' then 'admin' else profiles.role end;
   return new;
 end; $$;
 
@@ -119,14 +124,20 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- Backfill any existing users in auth.users and make them admin
+-- Backfill any missing profiles without overwriting existing roles
 insert into public.profiles (id, name, role)
 select 
   id, 
   coalesce(raw_user_meta_data->>'name', split_part(email, '@', 1)),
-  'admin'
+  case when lower(email) = 'kd@example.com' then 'admin' else 'staff' end
 from auth.users
-on conflict (id) do update set role = 'admin';
+on conflict (id) do update set
+  role = case when lower(auth.users.email) = 'kd@example.com' then 'admin' else profiles.role end;
+
+-- Ensure kd@example.com is explicitly admin
+update public.profiles
+set role = 'admin'
+where id in (select id from auth.users where lower(email) = 'kd@example.com');
 
 -- Function: Close date menu and charge everyone who voted 'yes'
 create or replace function public.close_menu_and_charge(p_date date)
@@ -269,3 +280,124 @@ begin
     (v_vendor_id, 'Aloo Paratha', 40.00, 'breakfast')
   on conflict do nothing;
 end $$;
+
+-- ========================================================
+-- 11. Admin Settings & Self-Service Top-up Requests System
+-- ========================================================
+
+-- Settings table (Admin UPI ID, payee name, QR)
+create table if not exists public.admin_settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz default now()
+);
+
+-- Seed default settings
+insert into public.admin_settings (key, value)
+values 
+  ('admin_upi_id', 'kotechashalini-1@okicici'),
+  ('admin_payee_name', 'shalini Kotecha')
+on conflict (key) do update set value = excluded.value;
+
+-- Top-up Requests Table (Supports Screenshot Upload & UPI Ref)
+create table if not exists public.topup_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  amount numeric(10,2) not null check (amount > 0),
+  upi_ref text,
+  screenshot_url text,
+  note text,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  rejection_reason text,
+  created_at timestamptz default now(),
+  reviewed_at timestamptz,
+  reviewed_by uuid references public.profiles(id) on delete set null
+);
+
+-- Ensure columns exist if table was already created
+alter table public.topup_requests add column if not exists screenshot_url text;
+alter table public.topup_requests alter column upi_ref drop not null;
+
+-- Function: Approve Top-up Request
+create or replace function public.approve_topup_request(p_request_id uuid)
+returns void language plpgsql security definer
+set search_path = public as $$
+declare
+  v_req record;
+  v_desc text;
+begin
+  if not public.is_admin() then
+    raise exception 'Admin only';
+  end if;
+
+  select * into v_req 
+  from public.topup_requests 
+  where id = p_request_id and status = 'pending'
+  for update;
+
+  if not found then
+    raise exception 'Pending top-up request not found';
+  end if;
+
+  v_desc := 'UPI Top-up (' || coalesce('Ref: ' || v_req.upi_ref, 'Screenshot Verified') || coalesce(' - ' || v_req.note, '') || ')';
+
+  -- Insert payment record into wallet_transactions
+  insert into public.wallet_transactions (user_id, type, amount, note)
+  values (
+    v_req.user_id, 
+    'payment', 
+    v_req.amount, 
+    v_desc
+  );
+
+  -- Update topup request status
+  update public.topup_requests
+  set status = 'approved',
+      reviewed_at = now(),
+      reviewed_by = auth.uid()
+  where id = p_request_id;
+end; $$;
+
+-- Function: Reject Top-up Request
+create or replace function public.reject_topup_request(p_request_id uuid, p_reason text default null)
+returns void language plpgsql security definer
+set search_path = public as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Admin only';
+  end if;
+
+  update public.topup_requests
+  set status = 'rejected',
+      rejection_reason = p_reason,
+      reviewed_at = now(),
+      reviewed_by = auth.uid()
+  where id = p_request_id and status = 'pending';
+end; $$;
+
+-- RLS for Admin Settings
+alter table public.admin_settings enable row level security;
+
+drop policy if exists "admin_settings read" on public.admin_settings;
+create policy "admin_settings read" on public.admin_settings for select to authenticated 
+  using (true);
+
+drop policy if exists "admin_settings admin write" on public.admin_settings;
+create policy "admin_settings admin write" on public.admin_settings for all to authenticated 
+  using (public.is_admin()) with check (public.is_admin());
+
+-- RLS for Topup Requests
+alter table public.topup_requests enable row level security;
+
+drop policy if exists "topup_requests read" on public.topup_requests;
+create policy "topup_requests read" on public.topup_requests for select to authenticated 
+  using (user_id = auth.uid() or public.is_admin());
+
+drop policy if exists "topup_requests insert" on public.topup_requests;
+create policy "topup_requests insert" on public.topup_requests for insert to authenticated 
+  with check (user_id = auth.uid());
+
+drop policy if exists "topup_requests admin write" on public.topup_requests;
+create policy "topup_requests admin write" on public.topup_requests for all to authenticated 
+  using (public.is_admin()) with check (public.is_admin());
+
